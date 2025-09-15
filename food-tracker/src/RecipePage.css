@@ -1,0 +1,63 @@
+.recipe-page {
+  background-color: #fff;
+  min-height: 100vh;
+  width: 100%;               /* take up full width */
+  display: flex;
+  flex-direction: column;
+  align-items: center;        /* center horizontally */
+  justify-content: flex-start;/* content starts below nav */
+  padding: 2rem;
+  box-sizing: border-box;
+  color: #000;
+}
+
+
+.recipe-filters {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  justify-content: center; /* center the buttons */
+  width: 100%;             /* optional if you want full width */
+  max-width: 600px;        /* optional, keeps buttons together */
+}
+
+.recipe-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2rem;
+  justify-content: center;
+  align-items: flex-start; /* makes horizontal row alignment */
+  width: 100%; /* make sure it stretches across the page */
+  max-width: none; /* remove constraints */
+}
+
+
+.recipe-filters button {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 8px;
+  background-color: #007bff;
+  color: #fff;
+  cursor: pointer;
+}
+
+.recipe-filters button:hover {
+  background-color: #0056b3;
+}
+
+
+.recipe-card {
+  background-color: #f9f9f9;
+  padding: 1rem;
+  border-radius: 12px;
+  width: 200px;
+  text-align: center;
+}
+
+.recipe-card img {
+  width: 100%;
+  height: 120px;
+  object-fit: cover;
+  border-radius: 8px;
+  margin-bottom: 0.5rem;
+}

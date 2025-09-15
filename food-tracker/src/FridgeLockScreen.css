@@ -1,0 +1,181 @@
+/* Reset */
+html, body {
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  font-family: Arial, sans-serif;
+}
+
+#root {
+  height: 100%;
+  width: 100%;
+  display: flex;
+}
+
+/* Lock screen container */
+.lock-screen {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  background: #f0f4f8;
+  padding: 2rem;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.lock-screen h1 {
+  font-size: 2rem;
+  margin-bottom: 1.5rem;
+  color: black;
+}
+
+/* Status bar */
+.status-bar-container {
+  width: 90%;
+  height: 20px;
+  background-color: #ccc;
+  border-radius: 10px;
+  margin-bottom: 1rem;
+  overflow: hidden;
+}
+
+.status-bar-fill {
+  height: 100%;
+  width: 0%;
+  background-color: green;
+  transition: width 0.3s, background-color 0.3s;
+  border-radius: 10px 0 0 10px;
+}
+
+/* Item card */
+.item-card {
+  position: relative;
+  background: white;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  max-width: 900px;   /* max card width */
+  height: 110px;      /* slightly taller for claimed line */
+  margin: 0.5rem auto; /* center with spacing */
+  padding-left: 400px; /* leave space for icon */
+  padding-right: 1.5rem;
+  box-sizing: border-box;
+  cursor: pointer;
+}
+
+/* Icon container */
+.item-left {
+  position: absolute;   /* position icon inside card */
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Food icons */
+.food-icon {
+  width: 100px;
+  height: 100px;
+  object-fit: contain;
+}
+
+.apple-icon {
+  width: 100px;   /* match the other icons */
+  height: 100px;
+  object-fit: contain;
+}
+
+/* Item info: name + quantity + claimed */
+.item-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.item-name {
+  font-weight: 500;
+  font-size: 1.1rem;
+  color: #000;
+  overflow-wrap: break-word;
+}
+
+.item-quantity {
+  font-size: 0.9rem;
+  color: #555;
+}
+
+.item-claimed {
+  font-size: 0.85rem;
+  color: #777;
+  font-style: italic;
+}
+
+/* Expiry status on right */
+.expired { color: grey; }
+.urgent { color: red; }
+.warning { color: orange; }
+.safe { color: green; }
+
+/* Group headers */
+.group h2 {
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+  font-size: 1.5rem;
+  color: #333;
+  border-bottom: 1px solid #ccc;
+  width: 100%;
+  padding-bottom: 0.3rem;
+}
+
+/* Hover effect for icons */
+.food-icon:hover {
+  transform: scale(1.2);
+  transition: transform 0.2s;
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 100;
+}
+
+.modal-content {
+  background: #fff;
+  color: black;
+  padding: 2rem;
+  border-radius: 12px;
+  max-width: 500px;
+  width: 90%;
+  position: relative;
+  text-align: center;
+}
+
+.modal-image {
+  width: 150px;
+  height: 150px;
+  object-fit: contain;
+  margin-bottom: 1rem;
+}
+
+.close-btn {
+  position: absolute;
+  top: 10px;
+  right: 15px;
+  font-size: 1.5rem;
+  border: none;
+  background: none;
+  cursor: pointer;
+}

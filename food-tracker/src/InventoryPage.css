@@ -1,0 +1,41 @@
+.inventory-page {
+  background: #fff;
+  min-height: 100vh;
+  padding: 2rem;
+  box-sizing: border-box;
+  font-family: Arial, sans-serif;
+  color: #000;
+  text-align: center;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* center horizontally */
+}
+
+.chart-container {
+  margin: 2rem 0;
+  width: 100%;
+  max-width: 500px;
+  display: flex;
+  justify-content: center; /* center the pie chart */
+}
+
+.category-list {
+  margin-top: 2rem;
+  text-align: left;
+  width: 100%;
+  max-width: 400px;
+}
+
+.category-list h2 {
+  margin-bottom: 1rem;
+}
+
+.category-list ul {
+  padding-left: 1.2rem;
+  margin: 0;
+}
+
+.category-list li {
+  margin-bottom: 0.5rem;
+}
