@@ -32,6 +32,12 @@ export default function NavBar() {
       >
         Receipt
       </button>
+      <button
+        className={location.pathname === "/tempitemphoto" ? "active" : ""}
+        onClick={() => navigate("/tempitemphoto")}
+      >
+        ItemPhoto
+      </button>
     </div>
   );
 }

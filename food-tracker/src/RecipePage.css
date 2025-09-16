@@ -61,3 +61,19 @@
   border-radius: 8px;
   margin-bottom: 0.5rem;
 }
+
+.receipt-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  background-color: #f9f9f9;
+  transition: opacity 0.4s ease, transform 0.4s ease;
+}
+
+.receipt-item.removing {
+  opacity: 0;
+  transform: translateX(-50px);
+}
