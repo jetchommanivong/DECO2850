@@ -6,6 +6,7 @@ import RecipePage from "./RecipePage";
 import InventoryPage from "./InventoryPage";
 import ReceiptScan from "./ReceiptScan";
 import TempItemPhoto from "./TempItemPhoto";
+import Household from "./Household";
 import NavBar from "./NavBar";
 
 export default function App() {
