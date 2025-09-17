@@ -61,8 +61,8 @@ export default function App() {
             />
           }
         />
+        <Route path="/household" element={<Household />} />
       </Routes>
-      <Route path="/household" element={<Household />} />
       <NavBar />
     </Router>
   );
