@@ -38,6 +38,14 @@ export default function NavBar() {
       >
         ItemPhoto
       </button>
+
+      <button
+        className={location.pathname === "/household" ? "active" : ""}
+        onClick={() => navigate("/household")}
+      >
+        Household
+      </button>
+      
     </div>
   );
 }
