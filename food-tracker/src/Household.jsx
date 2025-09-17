@@ -191,32 +191,50 @@ export default function Household() {
         
         {selectedItem && (
           <ItemPopup
-            item={selectedItem}
-            onClose={() => setSelectedItem(null)}
-            onDelete={(name) =>
-              setItems((prev) => prev.filter((i) => i.name !== name))
-            }
-            onToggleClaim={(itemName, claim) => {
-              setItems((prev) =>
-                prev.map((i) =>
-                  i.name === itemName
-                    ? {
-                        ...i,
-                        claimedBy: claim
-                          ? [...i.claimedBy, "You"]
-                          : i.claimedBy.filter((u) => u !== "You"),
-                      }
-                    : i
-                )
-              );
-              setActivity((prev) => [
-                claim
-                  ? `You claimed ${itemName}`
-                  : `You unclaimed ${itemName}`,
-                ...prev,
-              ]);
-            }}
-          />
+          item={selectedItem}
+          onClose={() => setSelectedItem(null)}
+          onDelete={(name) =>
+            setItems((prev) => prev.filter((i) => i.name !== name))
+          }
+          onToggleClaim={(itemName, claim) => {
+            // Update fridge items
+            setItems((prev) =>
+              prev.map((i) =>
+                i.name === itemName
+                  ? {
+                      ...i,
+                      claimedBy: claim
+                        ? [...i.claimedBy, "You"]
+                        : i.claimedBy.filter((u) => u !== "You"),
+                    }
+                  : i
+              )
+            );
+
+            // Update user claimed items
+            setUsers((prev) =>
+              prev.map((u) =>
+                u.name === "You"
+                  ? {
+                      ...u,
+                      claimed: claim
+                        ? [...u.claimed, itemName]
+                        : u.claimed.filter((c) => c !== itemName),
+                    }
+                  : u
+              )
+            );
+
+            // Update activity log
+            setActivity((prev) => [
+              claim
+                ? `You claimed ${itemName}`
+                : `You unclaimed ${itemName}`,
+              ...prev,
+            ]);
+          }}
+        />
+
         )}
         
         {showMealForm && (
