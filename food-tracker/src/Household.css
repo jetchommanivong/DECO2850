@@ -1,0 +1,236 @@
+:root {
+  --primary: #647fbc;
+  --secondary: #91adc8;
+  --accent: #aed6cf;
+  --light: #fafdd6;
+  --text-dark: #2a2a2a;
+  --text-light: #ffffff;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 180%;
+  background: var(--light);
+}
+
+.household-page {
+  background: var(--light);
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.household-container {
+  width: 100%;
+  max-width: 1000px;
+  padding: 20px;
+  box-sizing: border-box;
+  color: var(--text-dark);
+}
+
+/* Header */
+.household-header {
+  text-align: center;
+  margin-bottom: 20px;
+}
+.home-logo {
+  width: 150px;
+  height: 150px;
+  margin-bottom: 10px;
+}
+.household-header h1 {
+  font-size: 2.5rem;
+  font-weight: bold;
+  color: var(--primary);
+}
+
+/* User avatars */
+.user-row {
+  display: flex;
+  justify-content: center;
+  gap: 30px;
+  align-items: center;
+  margin-bottom: 30px;
+}
+.user-avatar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+}
+.user-avatar img {
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  border: 3px solid var(--secondary);
+}
+.user-avatar span {
+  margin-top: 5px;
+  font-size: 0.9rem;
+}
+.invite-btn {
+  background: var(--accent);
+  border: none;
+  padding: 10px;
+  border-radius: 50%;
+  cursor: pointer;
+}
+.invite-btn img {
+  width: 28px;
+  height: 28px;
+}
+
+/* Section headers */
+h2 {
+  margin-top: 20px;
+  margin-bottom: 10px;
+  color: var(--primary);
+}
+
+/* Activity */
+.activity-log {
+  padding: 0;
+  list-style: none;
+}
+.activity-log li {
+  background: var(--secondary);
+  color: var(--text-light);
+  padding: 10px;
+  margin: 8px 0;
+  border-radius: 6px;
+}
+
+/* Search bar */
+.search-bar {
+  display: flex;
+  align-items: center;
+  background: var(--accent);
+  border-radius: 6px;
+  padding: 6px 10px;
+  margin-bottom: 12px;
+}
+.search-bar img {
+  width: 20px;
+  margin-right: 8px;
+}
+.search-bar input {
+  border: none;
+  background: transparent;
+  flex: 1;
+  outline: none;
+  font-size: 1rem;
+}
+
+/* Items */
+.items-list {
+  padding: 0;
+  list-style: none;
+}
+.items-list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--accent);
+  padding: 12px 16px;
+  margin: 8px 0;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: box-shadow 0.3s ease, transform 0.2s ease;
+}
+.items-list li:hover {
+  box-shadow: 0 0 12px var(--primary), 0 0 24px var(--accent);
+  transform: scale(1.02);
+}
+.claimed-icons {
+  display: flex;
+  gap: 5px;
+}
+.claimed-icons img {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+}
+
+/* Meal Plan */
+.meal-plan-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 25px;
+}
+.add-meal-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+.add-meal-btn img {
+  width: 50px;
+  height: 50px;
+  transition: transform 0.2s ease-in-out;
+}
+.add-meal-btn:hover img {
+  transform: scale(1.2);
+  animation: bounce 0.3s ease;
+}
+.meal-plan {
+  list-style: none;
+  padding: 0;
+}
+.meal-plan li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--secondary);
+  color: var(--text-light);
+  margin: 8px 0;
+  padding: 12px 16px;
+  border-radius: 6px;
+}
+.meal-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.meal-date img {
+  width: 18px;
+  margin-right: 6px;
+  vertical-align: middle;
+}
+.meal-planner {
+  font-size: 0.85rem;
+}
+.meal-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.join-btn {
+  background: var(--primary);
+  border: none;
+  color: var(--text-light);
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: transform 0.2s ease-in-out;
+}
+.join-btn:hover {
+  transform: scale(1.1);
+  animation: bounce 0.3s;
+}
+.joined-icons {
+  display: flex;
+  gap: 5px;
+}
+.joined-icons img {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+}
+
+/* Bounce animation reused */
+@keyframes bounce {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.15); }
+}

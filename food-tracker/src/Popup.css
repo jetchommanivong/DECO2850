@@ -1,0 +1,273 @@
+.popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.popup-box {
+  padding: 25px;
+  border-radius: 12px;
+  width: 420px;
+  max-width: 95%;
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+  position: relative;
+  font-family: Arial, sans-serif;
+}
+
+.popup-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+.popup-close img {
+  width: 22px;
+  height: 22px;
+}
+
+/* ========== USER POPUP ========== */
+.user-popup {
+  background: var(--light);
+}
+.user-popup .popup-header {
+  text-align: center;
+  margin-bottom: 15px;
+}
+.user-popup .popup-avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  margin-bottom: 8px;
+}
+.user-popup h2 {
+  color: var(--primary);
+  margin-bottom: 15px;
+}
+.user-details {
+  text-align: left;
+}
+.user-details h3 {
+  margin-top: 15px;
+  margin-bottom: 8px;
+  color: var(--primary);
+}
+.user-details ul {
+  padding-left: 18px;
+  margin: 0;
+}
+.user-details li {
+  margin-bottom: 5px;
+  list-style-type: disc;
+}
+
+/* ========== INVITE POPUP ========== */
+.invite-popup {
+  background: var(--light);
+  text-align: center;
+}
+.invite-popup h2 {
+  color: var(--primary);
+  margin-bottom: 20px;
+}
+.invite-form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  text-align: left;
+}
+.invite-form label {
+  font-weight: bold;
+  color: var(--primary);
+}
+.invite-form input {
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 1rem;
+  background: #f5f5f5; /* light color */
+  color: var(--text-dark);
+}
+.avatar-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+}
+.avatar-option {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  cursor: pointer;
+  border: 3px solid transparent;
+  transition: transform 0.2s, border 0.2s;
+}
+.avatar-option:hover {
+  transform: scale(1.1);
+}
+.avatar-option.selected {
+  border: 3px solid var(--primary);
+}
+.submit-btn {
+  background: var(--primary);
+  color: var(--text-light);
+  border: none;
+  padding: 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: transform 0.2s ease-in-out, background 0.2s ease-in-out;
+}
+.submit-btn:hover {
+  transform: scale(1.05);
+  background: #4f67a3;
+}
+.invite-hint {
+  margin-top: 5px;
+  font-size: 0.9rem;
+  color: var(--primary);
+  text-align: center;
+}
+
+/* ========== MEAL PLAN POPUP ========== */
+.meal-popup {
+  background: var(--light);
+}
+.meal-popup h2 {
+  text-align: center;
+  color: var(--primary);
+  margin-bottom: 20px;
+}
+.meal-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.form-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.form-label {
+  min-width: 120px;
+  font-weight: bold;
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.form-input {
+  flex: 1;
+  padding: 8px 10px;
+  background: #f5f5f5;
+  color: var(--text-dark);
+  border: 1px solid #ccc;
+  border-radius: 6px;
+}
+.form-input:focus {
+  outline: none;
+  border-color: var(--primary);
+  background: #fff;
+}
+
+/* ========== ITEM POPUP ========== */
+.item-popup {
+  background: #fff;
+  text-align: center;
+}
+.item-popup .popup-img {
+  margin: 0 auto 10px auto;
+}
+.item-popup .popup-img img {
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+}
+.item-popup .item-title {
+  color: var(--primary);
+  font-size: 1.6rem;
+  margin-bottom: 15px;
+}
+.item-popup .popup-details {
+  text-align: left;
+  margin: 15px 0;
+}
+.item-popup .suggestion-title {
+  margin-top: 15px;
+  color: var(--primary);
+}
+.item-popup .suggestion-list {
+  text-align: left;
+  margin: 10px 0 20px 20px;
+  padding: 0;
+}
+.item-popup .popup-actions {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin-top: 20px;
+}
+.item-popup .action-btn {
+  background: var(--primary);
+  color: var(--text-light);
+  border: none;
+  padding: 10px 18px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: background 0.2s ease-in-out;
+}
+.item-popup .action-btn:hover {
+  background: var(--secondary);
+}
+
+/* Claim button */
+.claim-btn {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  font-weight: bold;
+  text-decoration: underline;
+  cursor: pointer;
+  transition: color 0.2s, text-shadow 0.2s;
+  color: var(--primary);
+}
+
+.claim-btn:hover {
+  color: goldenrod;
+  text-shadow: 0 0 8px var(--accent), 0 0 12px var(--primary);
+}
+
+.claim-btn.claimed {
+  color: green;
+}
+
+.claim-btn.claimed:hover {
+  color: red;
+  text-shadow: 0 0 8px red, 0 0 12px whitesmoke;
+}
+
+/* ===== Hover bounce for avatars, add mate & join ===== */
+.user-avatar img,
+.invite-btn img,
+.join-btn {
+  transition: transform 0.2s ease-in-out;
+}
+.user-avatar img:hover,
+.invite-btn img:hover,
+.join-btn:hover {
+  transform: scale(1.1);
+  animation: bounce 0.3s;
+}
+@keyframes bounce {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.15); }
+}
