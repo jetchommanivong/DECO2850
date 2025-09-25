@@ -66,3 +66,112 @@
 .category-items button:hover {
   background: #d93636;
 }
+
+.household-member {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 15px;
+}
+
+.log-for { 
+  background-color: #e3e2e1;
+  padding: 10px;
+  border-radius: 5px;
+  margin-bottom: 15px;
+  border: 1px solid #BABABA;
+}
+
+.start-logging button {
+  padding: 12px 24px;
+  font-size: 16px;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+.start-logging button:hover {
+  background: #3d8f41
+}
+
+.voice-logging-section {
+  margin-top: 2rem;
+  padding: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  width: 100%;
+  max-width: 400px;   /* fixed width */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  box-sizing: border-box;
+}
+
+.voice-logging-section button {
+  width: 100%;              /* button stretches to container */
+  max-width: 100%;          /* no shrinking */
+  padding: 12px;
+  font-size: 16px;
+  border-radius: 6px;
+  margin: 5px 0;            /* spacing between stacked buttons */
+}
+
+.member-selection {
+  width: 100%;
+}
+
+.primary-btn {
+  background-color: #4CAF50;
+  color: white;
+  font-weight: bold;
+  border: none;
+  cursor: pointer;
+}
+
+.primary-btn:hover {
+  background-color: #3d8f41;
+}
+
+.secondary-btn {
+  background-color: #FF9800;
+  color: white;
+  font-weight: bold;
+  border: none;
+  cursor: pointer;
+}
+
+.secondary-btn:hover {
+  background-color: #ed8d00;
+}
+
+.household-member button {
+  background-color: white;
+  color: black;
+  border: 1px solid black;
+  cursor: pointer;
+}
+
+.household-member button:hover {
+  background: #D1D1D1;
+}
+
+.cancel-button {
+  padding: 12px 24px;
+  font-size: 16px;
+  background-color: white;
+  color: #FF4C4C;
+  border: 1px solid #FF4C4C;
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.detected-text {
+  padding: 10px;
+  border-radius: 5px;
+  margin-bottom: 15px;
+}
