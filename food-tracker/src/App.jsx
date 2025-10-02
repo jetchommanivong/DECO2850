@@ -8,6 +8,8 @@ import ReceiptScan from "./ReceiptScan";
 import TempItemPhoto from "./TempItemPhoto";
 import Household from "./Household";
 import NavBar from "./NavBar";
+import VoiceInput from "./VoiceInput";
+
 
 export default function App() {
   // Initial inventory
@@ -37,6 +39,36 @@ export default function App() {
 };
 
 
+const handleTranscript = async (text) => {
+  console.log("Transcript:", text);
+
+  try {
+    const response = await fetch("http://localhost:4000/api/parse-transcript", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        transcript: text,
+        selectedMemberId: "user1", // change later to actual household member
+        inventory: inventory.map((i) => ({
+          item_id: i.id,
+          item_name: i.name,
+        })),
+        membersItems: [], // depends on your design
+        householdMembers: [], // depends on your design
+      }),
+    });
+
+    const result = await response.json();
+    console.log("Backend parsed:", result);
+
+    // optionally: update inventory directly if backend returns structured items
+  } catch (err) {
+    console.error("Error sending transcript:", err);
+  }
+};
+
+
+
   return (
     <Router>
       <Routes>
@@ -48,6 +80,7 @@ export default function App() {
             <InventoryPage
               items={inventory}
               onUpdateQuantity={handleUpdateQuantity}
+              onAddItem={handleAddItem}
             />
           }
         />

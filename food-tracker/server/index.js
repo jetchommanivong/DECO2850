@@ -55,21 +55,47 @@ function validateTranscript(parsed, selectedMemberId, inventory, membersItems, h
       itemErrors.push(`Invalid or missing action. Expected "add" or "remove", got "${item.action}"`);
     }
 
-    // check item name and find in inventory
+    // check item name and match in inventory
     if (!item.itemName || typeof item.itemName !== "string") {
       itemErrors.push("Missing or invalid item name");
     } else {
-      const inventoryItem = inventory.find(
-        inv => inv.item_name.toLowerCase().includes(item.itemName.toLowerCase()) || 
-               item.itemName.toLowerCase().includes(inv.item_name.toLowerCase())
+      const normalizedName = item.itemName.toLowerCase();
+      const inventoryItem = inventory.find(inv =>
+        inv.item_name.toLowerCase() === normalizedName ||
+        inv.item_name.toLowerCase().includes(normalizedName) ||
+        normalizedName.includes(inv.item_name.toLowerCase())
       );
-      
+
       if (!inventoryItem) {
-        itemErrors.push(`Item "${item.itemName}" not found in inventory. Available items: ${inventory.map(i => i.item_name).join(', ')}`);
+        if (item.action === "add") {
+          // allow new items to be added
+          item.itemId = null;
+        } else {
+          itemErrors.push(
+            `Item "${item.itemName}" not found in inventory. Available items: ${inventory.map(i => i.item_name).join(", ")}`
+          );
+        }
       } else {
-        item.itemId = inventoryItem.item_id;
+        item.itemId = inventoryItem.item_id || inventoryItem.id;
       }
     }
+
+
+    // check member only if householdMembers exist
+    if (household && household.length > 0) {
+      const member = household.find(m => String(m.member_id) === String(selectedMemberId));
+      if (!member) {
+        errors.push({
+          check: "Member validation",
+          message: `Invalid member ID: ${selectedMemberId}`
+        });
+        return { status: "unsuccessful", errors, warnings };
+      }
+    }
+
+
+
+
 
     // check quantity
     if (typeof item.quantity !== "number" || item.quantity <= 0 || isNaN(item.quantity)) {
@@ -113,7 +139,8 @@ function validateTranscript(parsed, selectedMemberId, inventory, membersItems, h
         item: item.itemId,
         itemName: item.itemName,
         quantity: item.quantity,
-        unit: item.unit.trim()
+        unit: item.unit.trim(),
+        category: item.category || "Other" // default category if not provided
       });
     }
   }
@@ -138,46 +165,57 @@ app.post("/api/parse-transcript", async (req, res) => {
     const aiResponse = await generateObject({
       model: openai("gpt-4o-mini"),
       schema: z.object({
-        items: z.array(z.object({
-          action: z.enum(["add", "remove"]).describe("The action being performed"),
-          itemName: z.string().describe("The name of the item"),
-          quantity: z.number().positive().describe("The positive quantity of the item"),
-          unit: z.string().optional().describe("The unit of measurement (optional)")
-        })).describe("Array of items extracted from transcript")
-      }),
-      prompt: `You are an expert at parsing food inventory transcripts. Extract ALL items mentioned with their actions and quantities.
+      items: z.array(z.object({
+        action: z.enum(["add", "remove"]).describe("The action being performed"),
+        itemName: z.string().describe("The name of the item"),
+        quantity: z.number().positive().describe("The positive quantity of the item"),
+        unit: z.string().optional().describe("The unit of measurement (optional)"),
+        category: z.enum(["Dairy", "Vegetables", "Fruits", "Meats", "Other"])
+          .describe("The food category for the item")
+      }))
+    }),
+      prompt: `You are an expert at parsing food inventory transcripts. Extract ALL items mentioned with their actions, quantities, units, and categories.
 
-              TRANSCRIPT: "${transcript}"
-                  
-              AVAILABLE INVENTORY ITEMS: ${inventory.map(i => i.item_name).join(', ')}
-                  
-              INSTRUCTIONS:
-              1. QUANTITY CONVERSION: Convert text quantities to numbers:
-                 - "half" or "1/2" → 0.5
-                 - "quarter" or "1/4" → 0.25  
-                 - "a dozen" → 12
-                  
-              2. ACTION MAPPING:
-                 - Words like "used", "ate", "consumed", "cooked with", "finished" → "remove"
-                 - Words like "added", "bought", "put in", "restocked", "got" → "add"
-                  
-              3. ITEM MATCHING: Match mentioned items to available inventory items (case-insensitive, partial matches OK)
-                  
-              4. UNIT EXTRACTION: Extract units like "slices", "cups", "pieces", "grams", etc. If no unit mentioned, leave empty.
-                  
-              5. MULTIPLE ITEMS: If transcript mentions multiple items (e.g., "2 eggs and 3 slices of cheese"), extract each as separate items.
-                  
-              EXAMPLE:
-              Input: "I used 2 eggs and half a tomato"
-              Output: {
-                "items": [
-                  {"action": "remove", "itemName": "egg", "quantity": 2, "unit": "pieces"},
-                  {"action": "remove", "itemName": "tomato", "quantity": 0.5, "unit": "pieces"}
-                ]
-              }
-                  
-              Be thorough and extract every item mentioned. If unclear, make reasonable assumptions based on context.`
+      TRANSCRIPT: "${transcript}"
+
+      AVAILABLE INVENTORY ITEMS: ${inventory.map(i => i.item_name).join(', ')}
+
+      INSTRUCTIONS:
+      1. QUANTITY CONVERSION: Convert text quantities to numbers:
+        - "half" or "1/2" → 0.5
+        - "quarter" or "1/4" → 0.25
+        - "a dozen" → 12
+
+      2. ACTION MAPPING:
+        - Words like "used", "ate", "consumed", "cooked with", "finished" → "remove"
+        - Words like "added", "bought", "put in", "restocked", "got" → "add"
+
+      3. ITEM MATCHING: Match mentioned items to available inventory items (case-insensitive, partial matches OK)
+
+      4. UNIT EXTRACTION: Extract units like "slices", "cups", "pieces", "grams", etc. If no unit mentioned, leave empty.
+
+      5. CATEGORY CLASSIFICATION:  Always assign one of these categories for each item:
+        - "Dairy" (milk, cheese, butter, yogurt, etc.)
+        - "Vegetables" (broccoli, lettuce, onion, garlic, etc.)
+        - "Fruits" (apple, tomato, banana, etc.)
+        - "Meats" (chicken, beef, pork, ham, fish, etc.)
+        - "Other" (if it doesn’t fit the above)
+
+      6. MULTIPLE ITEMS: If transcript mentions multiple items (e.g., "2 eggs and 3 slices of cheese"), extract each as separate items.
+
+      EXAMPLE:
+      Input: "I used 2 eggs and half a tomato"
+      Output: {
+        "items": [
+          {"action": "remove", "itemName": "egg", "quantity": 2, "unit": "pieces", "category": "Dairy"},
+          {"action": "remove", "itemName": "tomato", "quantity": 0.5, "unit": "pieces", "category": "Fruits"}
+        ]
+      }
+
+      Be thorough and always include category for every item.`
+
     });
+
 
     const parsed = aiResponse.object;
     console.log("AI parsed result:", JSON.stringify(parsed, null, 2));
