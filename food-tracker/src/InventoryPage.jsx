@@ -60,7 +60,6 @@ export default function InventoryPage({ items, onUpdateQuantity, onAddItem }) {
     recognition.start();
   };
 
-  // --- Parse transcript ---
   const handleParseTranscript = async () => {
     if (!selectedMember || !transcript) {
       alert("Please select a member and provide a transcript");
@@ -74,13 +73,10 @@ export default function InventoryPage({ items, onUpdateQuantity, onAddItem }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           transcript,
-          selectedMemberId: selectedMember.member_id, // ✅ matches one of the IDs above
-          inventory: items.map((i, idx) => ({
-            item_id: idx + 1,
-            item_name: i.name,
-          })),
-          membersItems: [], // can leave empty for now
-          householdMembers, // ✅ pass the actual array here
+          selectedMemberId: selectedMember.member_id,
+          inventory: items.map((i, idx) => ({ item_id: idx + 1, item_name: i.name })),
+          membersItems: [],
+          householdMembers,
         }),
       });
 
@@ -90,16 +86,33 @@ export default function InventoryPage({ items, onUpdateQuantity, onAddItem }) {
       if (json.log && json.log[0].status === "success") {
         json.log[0].data.forEach((item) => {
           if (item.action === "remove") {
-            onUpdateQuantity(item.item, item.quantity);
+            // Find the matching item in your React inventory by name
+            const match = items.find(
+              (i) => i.name.toLowerCase() === item.itemName.toLowerCase()
+            );
+
+            if (match) {
+              onUpdateQuantity(match.id, item.quantity);
+            } else {
+              console.warn(`⚠️ Could not find ${item.itemName} in inventory.`);
+            }
           } else if (item.action === "add") {
             onAddItem({
               id: Date.now().toString(),
               name: item.itemName,
-              category: item.category || "Misc", // ✅ now backend can send category
+              category: item.category || "Other",
               quantity: item.quantity,
               unit: item.unit,
             });
           }
+
+          // ✅ Log who performed this
+          onLogAction(
+            selectedMember.member_id,
+            item.action,
+            item.itemName,
+            item.quantity
+          );
         });
       }
     } catch (err) {
@@ -108,6 +121,7 @@ export default function InventoryPage({ items, onUpdateQuantity, onAddItem }) {
       setLoading(false);
     }
   };
+
 
 
   return (

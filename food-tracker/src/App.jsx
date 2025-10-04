@@ -38,6 +38,16 @@ export default function App() {
   );
 };
 
+const [usageLogs, setUsageLogs] = useState([]);
+
+// Log an action (for auditing / analytics later)
+const handleLogAction = (memberId, action, itemName, quantity) => {
+  setUsageLogs(prev => [
+    ...prev,
+    { memberId, action, itemName, quantity, timestamp: new Date().toISOString() }
+  ]);
+};
+
 
 const handleTranscript = async (text) => {
   console.log("Transcript:", text);
@@ -81,6 +91,7 @@ const handleTranscript = async (text) => {
               items={inventory}
               onUpdateQuantity={handleUpdateQuantity}
               onAddItem={handleAddItem}
+              onLogAction={handleLogAction}
             />
           }
         />

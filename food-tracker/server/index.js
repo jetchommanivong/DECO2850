@@ -94,9 +94,6 @@ function validateTranscript(parsed, selectedMemberId, inventory, membersItems, h
     }
 
 
-
-
-
     // check quantity
     if (typeof item.quantity !== "number" || item.quantity <= 0 || isNaN(item.quantity)) {
       itemErrors.push(`Invalid quantity: ${item.quantity}. Must be a positive number.`);
@@ -113,19 +110,41 @@ function validateTranscript(parsed, selectedMemberId, inventory, membersItems, h
       warnings.push(`No unit specified for ${item.itemName}, defaulting to "piece"`);
     }
 
-    // ownership and quantity validation for remove actions
-    if (item.action === "remove" && item.itemId && itemErrors.length === 0) {
-      const memberItem = membersItems.find(
-        mi => mi.item_id === item.itemId && mi.member_id === selectedMemberId
+    if (item.action === "remove") {
+      const inventoryItem = inventory.find(
+        inv => inv.item_name.toLowerCase().includes(item.itemName.toLowerCase())
       );
-      
-      if (!memberItem) {
-        itemErrors.push(`${member.member_name} does not own any "${item.itemName}"`);
-      } else if (memberItem.quantity < item.quantity) {
-        itemErrors.push(`${member.member_name} has only ${memberItem.quantity} ${item.itemName}, but tried to remove ${item.quantity}`);
-      }
-    }
 
+      if (!inventoryItem) {
+        itemErrors.push(`Item "${item.itemName}" not found in the shared fridge.`);
+      } else if (inventoryItem.quantity < item.quantity) {
+        itemErrors.push(
+          `Not enough ${item.itemName} in the fridge. Only ${inventoryItem.quantity} available.`
+        );
+      } else {
+        // ✅ Record valid removal (shared fridge)
+        validatedItems.push({
+          member: selectedMemberId,
+          action: item.action,
+          item: inventoryItem.item_id,
+          itemName: item.itemName,
+          quantity: item.quantity,
+          unit: item.unit,
+          category: item.category || "Other",
+        });
+      }
+    } else if (item.action === "add") {
+      // ✅ Additions still allowed for any user
+      validatedItems.push({
+        member: selectedMemberId,
+        action: item.action,
+        item: item.itemId || null,
+        itemName: item.itemName,
+        quantity: item.quantity,
+        unit: item.unit,
+        category: item.category || "Other",
+      });
+}
     // if this item has errors, add them to the main errors array
     if (itemErrors.length > 0) {
       errors.push({
