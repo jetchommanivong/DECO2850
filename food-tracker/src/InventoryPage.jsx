@@ -60,43 +60,55 @@ export default function InventoryPage({ items, onUpdateQuantity, onAddItem }) {
     recognition.start();
   };
 
-  const handleParseTranscript = async () => {
-    if (!selectedMember || !transcript) {
-      alert("Please select a member and provide a transcript");
-      return;
-    }
+  // --- Parse transcript ---
+    const handleParseTranscript = async () => {
+      if (!selectedMember || !transcript) {
+        alert("Please select a member and provide a transcript");
+        return;
+      }
 
-    setLoading(true);
-    try {
-      const res = await fetch("http://localhost:4000/api/parse-transcript", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          transcript,
-          selectedMemberId: selectedMember.member_id,
-          inventory: items.map((i, idx) => ({ item_id: idx + 1, item_name: i.name })),
-          membersItems: [],
-          householdMembers,
-        }),
-      });
+      setLoading(true);
+      try {
+        const res = await fetch("http://localhost:4000/api/parse-transcript", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            transcript,
+            selectedMemberId: selectedMember.member_id,
+            inventory: items.map((i, idx) => ({ item_id: idx + 1, item_name: i.name })),
+            membersItems: [],
+            householdMembers,
+          }),
+        });
 
-      const json = await res.json();
-      setResultJSON(json);
+        const json = await res.json();
+        setResultJSON(json);
 
-      if (json.log && json.log[0].status === "success") {
-        json.log[0].data.forEach((item) => {
+        // ✅ Stop if unsuccessful
+        if (!json.log || json.log[0].status !== "success") {
+          console.warn("Transcript validation failed:", json);
+          return;
+        }
+
+        // ✅ Deduplicate similar items by name + action
+        const uniqueData = Array.from(
+          new Map(json.log[0].data.map(item => [`${item.itemName}-${item.action}`, item])).values()
+        );
+
+        // ✅ Apply changes to inventory
+        uniqueData.forEach((item) => {
           if (item.action === "remove") {
-            // Find the matching item in your React inventory by name
+            // Find matching item in the inventory
             const match = items.find(
               (i) => i.name.toLowerCase() === item.itemName.toLowerCase()
             );
-
             if (match) {
               onUpdateQuantity(match.id, item.quantity);
             } else {
               console.warn(`⚠️ Could not find ${item.itemName} in inventory.`);
             }
           } else if (item.action === "add") {
+            // Use AI’s category instead of hardcoded “Misc”
             onAddItem({
               id: Date.now().toString(),
               name: item.itemName,
@@ -106,29 +118,40 @@ export default function InventoryPage({ items, onUpdateQuantity, onAddItem }) {
             });
           }
 
-          // ✅ Log who performed this
-          onLogAction(
-            selectedMember.member_id,
-            item.action,
-            item.itemName,
-            item.quantity
+          // ✅ Optional logging — who did what
+          console.log(
+            `${selectedMember.member_name} ${item.action}ed ${item.quantity} ${item.unit} of ${item.itemName} (${item.category})`
           );
         });
+
+        // ✅ Generate a human-readable summary
+        const readableSummary = uniqueData
+          .map(
+            (item) =>
+              `${selectedMember.member_name} ${item.action}ed ${item.quantity} ${item.unit} of ${item.itemName} (${item.category})`
+          )
+          .join("\n");
+
+        setResultJSON({
+          message: `Successfully validated ${uniqueData.length} item(s) for ${selectedMember.member_name}`,
+          details: readableSummary,
+        });
+      } catch (err) {
+        console.error("Error parsing transcript to JSON:", err);
+      } finally {
+        setLoading(false);
       }
-    } catch (err) {
-      console.error("Error parsing transcript to JSON:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
+
 
 
 
   return (
-    <div className="inventory-page">
-      <h1>Fridge Inventory</h1>
+  <div className="inventory-page">
+    <h1>Fridge Inventory</h1>
 
-      {/* Pie chart */}
+    {/* --- Pie Chart Section --- */}
+    <div className="chart-container">
       {data.length > 0 ? (
         <PieChart width={300} height={350}>
           <Pie
@@ -151,61 +174,88 @@ export default function InventoryPage({ items, onUpdateQuantity, onAddItem }) {
       ) : (
         <p>No items left in the fridge.</p>
       )}
+    </div>
 
-      {/* Category items */}
-      {selectedCategory && (
-        <div className="category-items">
-          <h2>{selectedCategory}</h2>
-          <ul>
-            {categories[selectedCategory].map((item) => (
-              <li key={item.id}>
-                {item.name} – {item.quantity} {item.unit}
-                <button onClick={() => onUpdateQuantity(item.id, 1)}>-1</button>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
+    {selectedCategory && (
+      <div className="category-items">
+        <h2>{selectedCategory}</h2>
+        <ul>
+          {categories[selectedCategory].map((item) => (
+            <li key={item.id}>
+              {item.name} – {item.quantity} {item.unit}
+            </li>
+          ))}
+        </ul>
+      </div>
+    )}
 
-      {/* Voice logging flow */}
-      <div className="voice-logging-section">
-        {!showMemberSelection ? (
-          <button onClick={() => setShowMemberSelection(true)}>Log</button>
-        ) : !selectedMember ? (
-          <div>
-            <p>Who are you logging as?</p>
+
+    {/* --- Voice Logging Section --- */}
+    <div className="voice-logging-section">
+      {!showMemberSelection ? (
+        <button onClick={() => setShowMemberSelection(true)} className="primary-btn">
+          Log
+        </button>
+      ) : !selectedMember ? (
+        <div>
+          <p>Who are you logging as?</p>
+          <div className="household-member">
             {householdMembers.map((m) => (
               <button key={m.member_id} onClick={() => setSelectedMember(m)}>
                 {m.member_name}
               </button>
             ))}
-            <button onClick={() => setShowMemberSelection(false)}>Cancel</button>
           </div>
-        ) : (
-          <div>
-            <p><strong>Logging for:</strong> {selectedMember.member_name}</p>
-            {!transcript ? (
-              <button onClick={handleStartLogging}>Start Logging</button>
-            ) : (
-              <>
-                <p>Detected: "{transcript}"</p>
-                <button onClick={handleParseTranscript} disabled={loading}>
-                  {loading ? "Processing..." : "Confirm & Process"}
-                </button>
-                <button onClick={() => setTranscript("")}>Try Again</button>
-              </>
-            )}
-            <button onClick={() => setShowMemberSelection(false)}>Cancel</button>
+          <button onClick={() => setShowMemberSelection(false)} className="cancel-button">
+            Cancel
+          </button>
+        </div>
+      ) : (
+        <div>
+          <div className="log-for">
+            <strong>Logging for:</strong> {selectedMember.member_name}
           </div>
-        )}
-      </div>
 
-      {/* Result debug */}
-      {resultJSON && (
-        <pre style={{ background: "#f5f5f5", padding: "1rem" }}>
-          {JSON.stringify(resultJSON, null, 2)}
-        </pre>
+          {!transcript ? (
+            <div className="start-logging">
+              <p>
+                Click “Start Logging” and say something like:
+                <br />
+                <em>“I used 2 eggs and 1 slice of cheese.”</em>
+              </p>
+              <button onClick={handleStartLogging} className="primary-btn">
+                Start Logging
+              </button>
+            </div>
+          ) : (
+            <div>
+              <div className="detected-text">
+                <strong>Detected:</strong> "{transcript}"
+              </div>
+              <button onClick={handleParseTranscript} disabled={loading} className="primary-btn">
+                {loading ? "Processing..." : "Confirm & Process"}
+              </button>
+              <button onClick={() => setTranscript("")} className="secondary-btn">
+                Try Again
+              </button>
+            </div>
+          )}
+
+          <button onClick={() => setShowMemberSelection(false)} className="cancel-button">
+            Cancel
+          </button>
+        </div>
       )}
     </div>
-  );
+        {resultJSON && (
+          <div className="result-section">
+            <h3>Action Summary</h3>
+            <div className="result-card success">
+              <p className="result-description">{resultJSON.message}</p>
+              <pre className="result-details">{resultJSON.details}</pre>
+            </div>
+          </div>
+        )}
+  </div>
+);
 }

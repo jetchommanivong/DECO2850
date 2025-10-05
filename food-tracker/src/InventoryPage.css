@@ -1,45 +1,68 @@
+/* --- Layout & Typography --- */
 .inventory-page {
-  background: #fff;
+  background: linear-gradient(135deg, #f9fafb, #eef2f3);
   min-height: 100vh;
-  padding: 2rem;
+  padding: 3rem 2rem;
   box-sizing: border-box;
-  font-family: Arial, sans-serif;
-  color: #000;
+  font-family: "Poppins", Arial, sans-serif;
+  color: #333;
   text-align: center;
   width: 100%;
   display: flex;
   flex-direction: column;
-  align-items: center; /* center horizontally */
+  align-items: center;
 }
 
+.inventory-page h1 {
+  font-size: 2rem;
+  font-weight: 600;
+  margin-bottom: 2rem;
+  color: #2b2b2b;
+}
+
+/* --- Pie Chart Container --- */
 .chart-container {
   margin: 2rem 0;
   width: 100%;
   max-width: 500px;
   display: flex;
-  justify-content: center; /* center the pie chart */
+  justify-content: center;
 }
 
-.category-list {
+.chart-section {
+  background-color: white;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  border-radius: 16px;
+  padding: 1.5rem;
+  width: 350px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transition: transform 0.3s ease;
+}
+
+.chart-section:hover {
+  transform: translateY(-3px);
+}
+
+/* --- Category List & Items --- */
+.category-items {
+  background-color: white;
   margin-top: 2rem;
-  text-align: left;
-  width: 100%;
-  max-width: 400px;
+  padding: 1.5rem;
+  width: 90%;
+  max-width: 500px;
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  animation: fadeIn 0.4s ease-in-out;
 }
 
-.category-list h2 {
+.category-items h2 {
+  font-size: 1.4rem;
+  color: #333;
   margin-bottom: 1rem;
+  text-align: center;
 }
-
-.category-list ul {
-  padding-left: 1.2rem;
-  margin: 0;
-}
-
-.category-list li {
-  margin-bottom: 0.5rem;
-}
-
 
 .category-items ul {
   list-style: none;
@@ -47,31 +70,72 @@
 }
 
 .category-items li {
-  margin: 0.5rem 0;
+  background: #f8fafc;
+  margin: 0.4rem 0;
+  padding: 0.6rem 1rem;
+  border-radius: 8px;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  transition: background 0.3s;
+}
+
+.category-items li:hover {
+  background: #e9eef2;
 }
 
 .category-items button {
   margin-left: 1rem;
-  padding: 0.2rem 0.6rem;
+  padding: 0.4rem 0.8rem;
   border: none;
   border-radius: 6px;
-  background: #ff4c4c;
+  background: #ef4444;
   color: white;
+  font-weight: 500;
   cursor: pointer;
+  transition: background-color 0.3s;
 }
 
 .category-items button:hover {
-  background: #d93636;
+  background-color: #dc2626;
 }
 
+.fade-in {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* --- Household Selection --- */
 .household-member {
   display: flex;
   gap: 1rem;
   flex-wrap: wrap;
+  justify-content: center;
   margin-bottom: 15px;
+}
+
+.household-member button {
+  background-color: white;
+  color: black;
+  border: 1px solid black;
+  cursor: pointer;
+  padding: 10px 18px;
+  border-radius: 8px;
+  transition: background 0.3s;
+}
+
+.household-member button:hover {
+  background: #D1D1D1;
 }
 
 .log-for { 
@@ -82,63 +146,43 @@
   border: 1px solid #BABABA;
 }
 
-.start-logging button {
-  padding: 12px 24px;
-  font-size: 16px;
-  background-color: #4CAF50;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  font-weight: bold;
-  margin-bottom: 10px;
-}
-
-.start-logging button:hover {
-  background: #3d8f41
-}
-
+/* --- Voice Logging Section --- */
 .voice-logging-section {
-  margin-top: 2rem;
-  padding: 1rem;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  width: 100%;
-  max-width: 400px;   /* fixed width */
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  box-sizing: border-box;
+  margin-top: 3rem;
+  background: #ffffff;
+  padding: 1.5rem;
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  width: 90%;
+  max-width: 500px;
+  text-align: center;
 }
 
 .voice-logging-section button {
-  width: 100%;              /* button stretches to container */
-  max-width: 100%;          /* no shrinking */
+  width: 100%;
   padding: 12px;
   font-size: 16px;
-  border-radius: 6px;
-  margin: 5px 0;            /* spacing between stacked buttons */
+  border-radius: 8px;
+  margin: 6px 0;
+  font-weight: 500;
 }
 
-.member-selection {
-  width: 100%;
-}
-
+/* --- Buttons --- */
 .primary-btn {
-  background-color: #4CAF50;
+  background-color: #3b82f6;
   color: white;
   font-weight: bold;
   border: none;
   cursor: pointer;
+  transition: background-color 0.3s ease;
 }
 
 .primary-btn:hover {
-  background-color: #3d8f41;
+  background-color: #2563eb;
 }
 
 .secondary-btn {
-  background-color: #FF9800;
+  background-color: #f59e0b;
   color: white;
   font-weight: bold;
   border: none;
@@ -146,32 +190,60 @@
 }
 
 .secondary-btn:hover {
-  background-color: #ed8d00;
-}
-
-.household-member button {
-  background-color: white;
-  color: black;
-  border: 1px solid black;
-  cursor: pointer;
-}
-
-.household-member button:hover {
-  background: #D1D1D1;
+  background-color: #d97706;
 }
 
 .cancel-button {
-  padding: 12px 24px;
-  font-size: 16px;
   background-color: white;
-  color: #FF4C4C;
-  border: 1px solid #FF4C4C;
-  border-radius: 3px;
+  color: #ef4444;
+  border: 1px solid #ef4444;
+  border-radius: 6px;
   cursor: pointer;
+  padding: 10px 18px;
+  transition: background-color 0.2s;
+}
+
+.cancel-button:hover {
+  background-color: #ffe4e6;
 }
 
 .detected-text {
+  background: #f9fafb;
+  border-left: 4px solid #3b82f6;
   padding: 10px;
   border-radius: 5px;
   margin-bottom: 15px;
+  font-style: italic;
+}
+
+.result-section {
+  margin-top: 1.5rem;
+  width: 100%;
+  max-width: 500px;
+  text-align: left;
+}
+
+.result-card {
+  background: #f7fdf7;
+  border-left: 5px solid #4caf50;
+  padding: 1rem;
+  border-radius: 8px;
+}
+
+.result-card.success {
+  border-color: #4caf50;
+}
+
+.result-description {
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+}
+
+.result-details {
+  font-family: monospace;
+  background: #fff;
+  padding: 0.8rem;
+  border-radius: 6px;
+  white-space: pre-wrap;
+  line-height: 1.4;
 }

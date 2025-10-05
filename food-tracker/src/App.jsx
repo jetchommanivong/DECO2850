@@ -21,10 +21,33 @@ export default function App() {
   { id: "x5", name: "Lettuce", category: "Vegetables", quantity: 1, unit: "pieces" },
 ]);
 
-  // Add new item (from ReceiptScan)
-  const handleAddItem = (item) => {
-    setInventory((prev) => [...prev, item]);
+  // Add new item or merge inventory updates
+  const handleAddItem = (data) => {
+    setInventory((prev) => {
+      // Case 1: If it's an array (from a merged update)
+      if (Array.isArray(data)) {
+        return data;
+      }
+
+      // Case 2: If it's a single item
+      const existing = prev.find(
+        (i) => i.name.toLowerCase() === data.name.toLowerCase()
+      );
+
+      if (existing) {
+        // Merge quantity if same item already exists
+        return prev.map((i) =>
+          i.id === existing.id
+            ? { ...i, quantity: i.quantity + data.quantity }
+            : i
+        );
+      }
+
+      // Add new item entirely
+      return [...prev, data];
+    });
   };
+
 
   const handleUpdateQuantity = (id, amount) => {
   setInventory((prev) =>
