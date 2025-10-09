@@ -10,6 +10,8 @@ export default function InventoryPage({ items, onUpdateQuantity, onAddItem }) {
   const [showMemberSelection, setShowMemberSelection] = useState(false);
   const [selectedMember, setSelectedMember] = useState(null);
   const [transcript, setTranscript] = useState("");
+  const [confirmationMessage, setConfirmationMessage] = useState("");
+
 
   // Group items by category
   const categories = items.reduce((acc, item) => {
@@ -85,44 +87,55 @@ export default function InventoryPage({ items, onUpdateQuantity, onAddItem }) {
         setResultJSON(json);
 
         // ✅ Stop if unsuccessful
-        if (!json.log || json.log[0].status !== "success") {
-          console.warn("Transcript validation failed:", json);
-          return;
-        }
-
-        // ✅ Deduplicate similar items by name + action
-        const uniqueData = Array.from(
-          new Map(json.log[0].data.map(item => [`${item.itemName}-${item.action}`, item])).values()
-        );
-
-        // ✅ Apply changes to inventory
-        uniqueData.forEach((item) => {
-          if (item.action === "remove") {
-            // Find matching item in the inventory
-            const match = items.find(
-              (i) => i.name.toLowerCase() === item.itemName.toLowerCase()
-            );
-            if (match) {
-              onUpdateQuantity(match.id, item.quantity);
-            } else {
-              console.warn(`⚠️ Could not find ${item.itemName} in inventory.`);
-            }
-          } else if (item.action === "add") {
-            // Use AI’s category instead of hardcoded “Misc”
-            onAddItem({
-              id: Date.now().toString(),
-              name: item.itemName,
-              category: item.category || "Other",
-              quantity: item.quantity,
-              unit: item.unit,
-            });
+          if (!json.log || json.log[0].status !== "success") {
+            console.warn("Transcript validation failed:", json);
+            setConfirmationMessage("❌ Unable to process — item not found or invalid input.");
+            setTimeout(() => setConfirmationMessage(""), 3000);
+            return;
           }
 
-          // ✅ Optional logging — who did what
-          console.log(
-            `${selectedMember.member_name} ${item.action}ed ${item.quantity} ${item.unit} of ${item.itemName} (${item.category})`
+          // ✅ Deduplicate similar items by name + action
+          const uniqueData = Array.from(
+            new Map(json.log[0].data.map(item => [`${item.itemName}-${item.action}`, item])).values()
           );
-        });
+
+          let addedItems = [];
+          let removedItems = [];
+
+          // ✅ Apply changes to inventory
+          uniqueData.forEach((item) => {
+            if (item.action === "remove") {
+              const match = items.find(
+                (i) => i.name.toLowerCase() === item.itemName.toLowerCase()
+              );
+              if (match) {
+                onUpdateQuantity(match.id, item.quantity);
+                removedItems.push(`${item.quantity} ${item.unit} of ${item.itemName}`);
+              } else {
+                console.warn(`⚠️ Could not find ${item.itemName} in inventory.`);
+              }
+            } else if (item.action === "add") {
+              onAddItem({
+                id: Date.now().toString(),
+                name: item.itemName,
+                category: item.category || "Other",
+                quantity: item.quantity,
+                unit: item.unit,
+              });
+              addedItems.push(`${item.quantity} ${item.unit} of ${item.itemName}`);
+            }
+          });
+
+          // ✅ Confirmation message
+          if (addedItems.length || removedItems.length) {
+            const addedText = addedItems.length ? `Added ${addedItems.join(", ")}` : "";
+            const removedText = removedItems.length ? `Removed ${removedItems.join(", ")}` : "";
+            const message = `${addedText}${addedText && removedText ? " and " : ""}${removedText}.`;
+            
+            setConfirmationMessage(`✅ ${message}`);
+            setTimeout(() => setConfirmationMessage(""), 3000);
+          }
+
 
         // ✅ Generate a human-readable summary
         const readableSummary = uniqueData
@@ -149,6 +162,15 @@ export default function InventoryPage({ items, onUpdateQuantity, onAddItem }) {
   return (
   <div className="inventory-page">
     <h1>Fridge Inventory</h1>
+      {confirmationMessage && (
+        <div
+          className={`confirmation-message ${
+            confirmationMessage.includes("❌") ? "error" : "success"
+          }`}
+        >
+          {confirmationMessage}
+        </div>
+      )}
 
     {/* --- Pie Chart Section --- */}
     <div className="chart-container">
@@ -218,11 +240,6 @@ export default function InventoryPage({ items, onUpdateQuantity, onAddItem }) {
 
           {!transcript ? (
             <div className="start-logging">
-              <p>
-                Click “Start Logging” and say something like:
-                <br />
-                <em>“I used 2 eggs and 1 slice of cheese.”</em>
-              </p>
               <button onClick={handleStartLogging} className="primary-btn">
                 Start Logging
               </button>
@@ -247,15 +264,57 @@ export default function InventoryPage({ items, onUpdateQuantity, onAddItem }) {
         </div>
       )}
     </div>
-        {resultJSON && (
+        {resultJSON && resultJSON.log && (
           <div className="result-section">
             <h3>Action Summary</h3>
-            <div className="result-card success">
-              <p className="result-description">{resultJSON.message}</p>
-              <pre className="result-details">{resultJSON.details}</pre>
-            </div>
+            {resultJSON.log.map((entry, idx) => (
+              <div
+                key={idx}
+                className={`result-card ${
+                  entry.status === "success" ? "success" : "error"
+                }`}
+              >
+                <p className="result-description">
+                  {entry.status === "success"
+                    ? entry.description || "Action completed successfully."
+                    : "Something went wrong while processing your request."}
+                </p>
+
+                {/* ✅ If there’s valid data */}
+                {entry.data && entry.data.length > 0 ? (
+                  <ul className="result-list">
+                    {entry.data.map((item, i) => (
+                      <li key={i} className="result-item">
+                        <strong>
+                          {householdMembers.find((m) => m.member_id === item.member)
+                            ?.member_name || "Someone"}
+                        </strong>{" "}
+                        {item.action === "add" ? "added" : "removed"}{" "}
+                        <strong>
+                          {item.quantity} {item.unit}
+                        </strong>{" "}
+                        of <strong>{item.itemName}</strong> ({item.category})
+                      </li>
+                    ))}
+                  </ul>
+                ) : entry.errors && entry.errors.length > 0 ? (
+                  // ❌ If backend validation failed
+                  <ul className="error-list">
+                    {entry.errors.map((err, i) => (
+                      <li key={i}>⚠️ {err.message}</li>
+                    ))}
+                  </ul>
+                ) : (
+                  // ❓ If no data or errors
+                  <p className="result-empty">
+                    No valid items were processed. Try again or check your phrasing.
+                  </p>
+                )}
+              </div>
+            ))}
           </div>
         )}
+
   </div>
 );
 }
