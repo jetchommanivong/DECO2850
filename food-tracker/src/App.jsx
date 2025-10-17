@@ -104,33 +104,35 @@ const handleTranscript = async (text) => {
 
   return (
     <Router>
-      <Routes>
-        <Route path="/" element={<FridgeLockScreen />} />
-        <Route path="/recipes" element={<RecipePage />} />
-        <Route
-          path="/inventory"
-          element={
-            <InventoryPage
-              items={inventory}
-              onUpdateQuantity={handleUpdateQuantity}
-              onAddItem={handleAddItem}
-              onLogAction={handleLogAction}
-            />
-          }
-        />
-        <Route path="/receipt" element={<ReceiptScan onAddItem={handleAddItem} />} />
-        <Route
-          path="/tempitemphoto"
-          element={
-            <TempItemPhoto
-              inventory={inventory}
-              onUpdateQuantity={handleUpdateQuantity}
-            />
-          }
-        />
-        <Route path="/household" element={<Household />} />
-      </Routes>
       <NavBar />
+      <div className="app-container">
+        <Routes>
+          <Route path="/" element={<FridgeLockScreen />} />
+          <Route path="/recipes" element={<RecipePage />} />
+          <Route
+            path="/inventory"
+            element={
+              <InventoryPage
+                items={inventory}
+                onUpdateQuantity={handleUpdateQuantity}
+                onAddItem={handleAddItem}
+                onLogAction={handleLogAction}
+              />
+            }
+          />
+          <Route path="/receipt" element={<ReceiptScan onAddItem={handleAddItem} />} />
+          <Route
+            path="/tempitemphoto"
+            element={
+              <TempItemPhoto
+                inventory={inventory}
+                onUpdateQuantity={handleUpdateQuantity}
+              />
+            }
+          />
+          <Route path="/household" element={<Household />} />
+        </Routes>
+      </div>
     </Router>
   );
 }
