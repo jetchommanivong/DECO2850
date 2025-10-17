@@ -9,7 +9,11 @@ dotenv.config();
 
 const app = express();
 app.use(cors({
-  origin: "http://localhost:5173",
+  origin: [
+    "http://localhost:5173", // old React/Vite frontend
+    "http://localhost:8081", // Expo web frontend
+    "http://127.0.0.1:8081", // alternate form some browsers use
+  ],
   methods: ["GET", "POST", "OPTIONS"],
   allowedHeaders: ["Content-Type"],
 }));

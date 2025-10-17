@@ -1,20 +1,21 @@
-import { useState } from "react";
-import "./Household.css";
-import UserPopup from "./UserPopup";
-import ItemPopup from "./ItemPopup";
-import MealPlanForm from "./MealPlanForm";
-import InviteUserPopup from "./InviteUserPopup";
+import React, { useState } from "react";
+import {
+  View,
+  Text,
+  Image,
+  ScrollView,
+  TextInput,
+  TouchableOpacity,
+  Alert,
+  Platform,
+} from "react-native";
 
-// Logos
+// Images
 import HomeLogo from "./assets/Logo/Home.png";
-import DateIcon from "./assets/Logo/Date.png";
-
-// Actions
+import DateIcon from "./assets/Logo/date.png";
 import InviteIcon from "./assets/Actions/Invite User.png";
 import AddPng from "./assets/Actions/Add.png";
 import SearchIcon from "./assets/Actions/Search.png";
-
-// Avatars
 import User1 from "./assets/Avatar/User 1.png";
 import User2 from "./assets/Avatar/User 2.png";
 import User4 from "./assets/Avatar/User 4.png";
@@ -33,7 +34,7 @@ export default function Household() {
     "You claimed Milk",
     "Josh claimed Broccoli",
   ]);
-  
+
   const [items, setItems] = useState([
     { id: 1, name: "Apple", claimedBy: ["Mia"] },
     { id: 2, name: "Milk", claimedBy: ["John", "You"] },
@@ -42,215 +43,249 @@ export default function Household() {
   ]);
 
   const [mealPlans, setMealPlans] = useState([
-    { id: 1, date: "2025-09-16", meal: "Chicken Curry", planner: "Josh", joined: ["John"] },
+    {
+      id: 1,
+      date: "2025-09-16",
+      meal: "Chicken Curry",
+      planner: "Josh",
+      joined: ["John"],
+    },
     { id: 2, date: "2025-09-17", meal: "Fried Rice", planner: "Mia", joined: [] },
   ]);
 
-  const [selectedUser, setSelectedUser] = useState(null);
-  const [selectedItem, setSelectedItem] = useState(null);
-  const [showMealForm, setShowMealForm] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  const [showInvitePopup, setShowInvitePopup] = useState(false);
 
-  const filteredItems = items.filter(item =>
+  const filteredItems = items.filter((item) =>
     item.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
-    <div className="household-page">
-      <div className="household-container">
-        {/* Header */}
-        <div className="household-header">
-          <img src={HomeLogo} alt="Home" className="home-logo" />
-          <h1>Household</h1>
-        </div>
+    <ScrollView
+      style={{ flex: 1, backgroundColor: "#fff" }}
+      contentContainerStyle={{ padding: 20 }}
+    >
+      {/* Header */}
+      <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 15 }}>
+        <Image source={HomeLogo} style={{ width: 40, height: 40, marginRight: 10 }} />
+        <Text style={{ fontSize: 26, fontWeight: "bold" }}>Household</Text>
+      </View>
 
-        {/* Users */}
-        <div className="user-row">
-          {users.map((u) => (
-            <div
-              key={u.id}
-              className="user-avatar"
-              onClick={() => setSelectedUser(u)}
-            >
-              <img src={u.avatar} alt={u.name} />
-              <span>{u.name}</span>
-            </div>
-          ))}
-          <div className="user-avatar" onClick={() => setShowInvitePopup(true)}>
-              <div className="invite-btn">
-                <img src={InviteIcon} alt="Invite" />
-              </div>
-              <span>Add a mate!</span>
-            </div>
-          </div>
-
-        {/* Activity */}
-        <h2>Activity</h2>
-        <ul className="activity-log">
-          {activity.map((a, i) => (
-            <li key={i}>{a}</li>
-          ))}
-        </ul>
-
-        {/* Items with search */}
-        <h2>Items</h2>
-        <div className="search-bar">
-          <img src={SearchIcon} alt="Search" />
-          <input
-            type="text"
-            placeholder="Search items..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
-        <ul className="items-list">
-          {filteredItems.map((item) => (
-            <li key={item.id} onClick={() => setSelectedItem(item)}>
-              {item.name}
-              <div className="claimed-icons">
-                {item.claimedBy.map((u) => {
-                  const usr = users.find((x) => x.name === u);
-                  return <img key={u} src={usr?.avatar} alt={u} />;
-                })}
-              </div>
-            </li>
-          ))}
-        </ul>
-
-        {/* Meal Plan */}
-        <div className="meal-plan-header">
-          <h2>Meal Plan</h2>
-          <button
-          onClick={() => setShowMealForm(true)}
-          className="add-meal-btn"
+      {/* User row */}
+      <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+        {users.map((u) => (
+          <TouchableOpacity
+            key={u.id}
+            onPress={() => Alert.alert(u.name, `Claimed: ${u.claimed.join(", ")}`)}
+            style={{ alignItems: "center", marginRight: 10 }}
+          >
+            <Image
+              source={u.avatar}
+              style={{ width: 60, height: 60, borderRadius: 30 }}
+            />
+            <Text>{u.name}</Text>
+          </TouchableOpacity>
+        ))}
+        <TouchableOpacity
+          onPress={() => Alert.alert("Invite User", "Feature not available on mobile")}
+          style={{ alignItems: "center", marginRight: 10 }}
         >
-          <img src={AddPng} alt="Add Meal" />
-        </button>
-        </div>
-        <ul className="meal-plan">
-          {mealPlans.map((m) => (
-            <li key={m.id}>
-              <div className="meal-info">
-                <span className="meal-date">
-                  <img src={DateIcon} alt="date" />
-                  {new Date(m.date).toDateString()}
-                </span>
-                <span className="meal-name">{m.meal}</span>
-                <span className="meal-planner">Planned by: {m.planner}</span>
-              </div>
+          <Image source={InviteIcon} style={{ width: 60, height: 60 }} />
+          <Text>Add a mate!</Text>
+        </TouchableOpacity>
+      </ScrollView>
 
-              <div className="meal-actions">
-                <div className="joined-icons">
-                  {m.joined.map((u) => {
-                    const usr = users.find((x) => x.name === u);
-                    return <img key={u} src={usr?.avatar} alt={u} />;
-                  })}
-                </div>
-                <button
-                  className="join-btn"
-                  onClick={() => {
-                  if (!m.joined.includes("You")) {
-                    setMealPlans((prev) =>
-                      prev.map((plan) =>
-                        plan.id === m.id
-                          ? { ...plan, joined: [...plan.joined, "You"] }
-                          : plan
+      {/* Activity */}
+      <Text style={{ fontSize: 20, fontWeight: "bold", marginTop: 20 }}>Activity</Text>
+      {activity.map((a, i) => (
+        <Text key={i} style={{ marginVertical: 2 }}>
+          • {a}
+        </Text>
+      ))}
+
+      {/* Items section */}
+      <Text style={{ fontSize: 20, fontWeight: "bold", marginTop: 20 }}>Items</Text>
+      <View
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+          borderWidth: 1,
+          borderColor: "#ccc",
+          borderRadius: 8,
+          paddingHorizontal: 10,
+          marginVertical: 8,
+        }}
+      >
+        <Image source={SearchIcon} style={{ width: 20, height: 20, marginRight: 8 }} />
+        <TextInput
+          placeholder="Search items..."
+          value={searchTerm}
+          onChangeText={setSearchTerm}
+          style={{ flex: 1, height: 40 }}
+        />
+      </View>
+
+      {filteredItems.map((item) => (
+        <TouchableOpacity
+          key={item.id}
+          onPress={() =>
+            Alert.alert(
+              item.name,
+              `Claimed by: ${item.claimedBy.join(", ")}`,
+              [
+                {
+                  text: "Toggle Claim",
+                  onPress: () => {
+                    const alreadyClaimed = item.claimedBy.includes("You");
+                    setItems((prev) =>
+                      prev.map((i) =>
+                        i.name === item.name
+                          ? {
+                              ...i,
+                              claimedBy: alreadyClaimed
+                                ? i.claimedBy.filter((u) => u !== "You")
+                                : [...i.claimedBy, "You"],
+                            }
+                          : i
+                      )
+                    );
+                    setUsers((prev) =>
+                      prev.map((u) =>
+                        u.name === "You"
+                          ? {
+                              ...u,
+                              claimed: alreadyClaimed
+                                ? u.claimed.filter((c) => c !== item.name)
+                                : [...u.claimed, item.name],
+                            }
+                          : u
                       )
                     );
                     setActivity((prev) => [
-                      `You joined a meal plan (${m.meal})`,
+                      alreadyClaimed
+                        ? `You unclaimed ${item.name}`
+                        : `You claimed ${item.name}`,
                       ...prev,
-                    ]);  
-                    alert("🎉 You’ve been added to this meal plan!");
-                  }
-                }}
-                >
-                  Join
-                </button>
-              </div>
-            </li>
-          ))}
-        </ul>
-
-        {/* Popups */}
-        {selectedUser && (
-          <UserPopup
-              user={selectedUser}
-              mealPlans={mealPlans}   // Pass mealPlans here
-              onClose={() => setSelectedUser(null)}
-          />        
-        )}
-
-        {showInvitePopup && (
-          <InviteUserPopup
-            onAdd={(newUser) => setUsers((prev) => [...prev, newUser])}
-            onClose={() => setShowInvitePopup(false)}
-          />
-        )}
-        
-        {selectedItem && (
-          <ItemPopup
-          item={selectedItem}
-          onClose={() => setSelectedItem(null)}
-          onDelete={(name) =>
-            setItems((prev) => prev.filter((i) => i.name !== name))
+                    ]);
+                  },
+                },
+                { text: "Cancel", style: "cancel" },
+              ]
+            )
           }
-          onToggleClaim={(itemName, claim) => {
-            // Update fridge items
-            setItems((prev) =>
-              prev.map((i) =>
-                i.name === itemName
-                  ? {
-                      ...i,
-                      claimedBy: claim
-                        ? [...i.claimedBy, "You"]
-                        : i.claimedBy.filter((u) => u !== "You"),
-                    }
-                  : i
-              )
-            );
-
-            // Update user claimed items
-            setUsers((prev) =>
-              prev.map((u) =>
-                u.name === "You"
-                  ? {
-                      ...u,
-                      claimed: claim
-                        ? [...u.claimed, itemName]
-                        : u.claimed.filter((c) => c !== itemName),
-                    }
-                  : u
-              )
-            );
-
-            // Update activity log
-            setActivity((prev) => [
-              claim
-                ? `You claimed ${itemName}`
-                : `You unclaimed ${itemName}`,
-              ...prev,
-            ]);
+          style={{
+            padding: 12,
+            borderBottomWidth: 1,
+            borderBottomColor: "#eee",
+            flexDirection: "row",
+            justifyContent: "space-between",
+            alignItems: "center",
           }}
-        />
+        >
+          <Text>{item.name}</Text>
+          <View style={{ flexDirection: "row" }}>
+            {item.claimedBy.map((u) => {
+              const usr = users.find((x) => x.name === u);
+              return (
+                <Image
+                  key={u}
+                  source={usr?.avatar}
+                  style={{
+                    width: 25,
+                    height: 25,
+                    borderRadius: 12.5,
+                    marginLeft: 5,
+                  }}
+                />
+              );
+            })}
+          </View>
+        </TouchableOpacity>
+      ))}
 
-        )}
-        
-        {showMealForm && (
-          <MealPlanForm
-            onClose={() => setShowMealForm(false)}
-            onAdd={(meal) => {
-              setMealPlans((prev) => [...prev, meal]);
-              setActivity((prev) => [
-                `You made a meal plan (${meal.meal})`,
-                ...prev,
-              ]);  // ✅ log new plan
-            }}
-          />
-        )}
+      {/* Meal Plan */}
+      <View
+        style={{
+          flexDirection: "row",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginTop: 25,
+        }}
+      >
+        <Text style={{ fontSize: 20, fontWeight: "bold" }}>Meal Plan</Text>
+        <TouchableOpacity
+          onPress={() => Alert.alert("Add Meal", "Meal creation popup not available")}
+        >
+          <Image source={AddPng} style={{ width: 30, height: 30 }} />
+        </TouchableOpacity>
+      </View>
 
-      </div>
-    </div>
+      {mealPlans.map((m) => (
+        <View
+          key={m.id}
+          style={{
+            borderWidth: 1,
+            borderColor: "#ddd",
+            borderRadius: 8,
+            padding: 10,
+            marginTop: 10,
+          }}
+        >
+          <View style={{ flexDirection: "row", alignItems: "center" }}>
+            <Image
+              source={DateIcon}
+              style={{ width: 20, height: 20, marginRight: 5 }}
+            />
+            <Text>{new Date(m.date).toDateString()}</Text>
+          </View>
+          <Text style={{ fontWeight: "bold", fontSize: 16 }}>{m.meal}</Text>
+          <Text>Planned by: {m.planner}</Text>
+
+          <View style={{ flexDirection: "row", marginTop: 5, alignItems: "center" }}>
+            {m.joined.map((u) => {
+              const usr = users.find((x) => x.name === u);
+              return (
+                <Image
+                  key={u}
+                  source={usr?.avatar}
+                  style={{
+                    width: 25,
+                    height: 25,
+                    borderRadius: 12.5,
+                    marginRight: 5,
+                  }}
+                />
+              );
+            })}
+            <TouchableOpacity
+              onPress={() => {
+                if (!m.joined.includes("You")) {
+                  setMealPlans((prev) =>
+                    prev.map((plan) =>
+                      plan.id === m.id
+                        ? { ...plan, joined: [...plan.joined, "You"] }
+                        : plan
+                    )
+                  );
+                  setActivity((prev) => [
+                    `You joined a meal plan (${m.meal})`,
+                    ...prev,
+                  ]);
+                  Alert.alert("🎉 Joined!", "You’ve been added to this meal plan.");
+                }
+              }}
+              style={{
+                marginLeft: 10,
+                backgroundColor: "#007AFF",
+                borderRadius: 6,
+                paddingHorizontal: 10,
+                paddingVertical: 6,
+              }}
+            >
+              <Text style={{ color: "white" }}>Join</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      ))}
+    </ScrollView>
   );
 }

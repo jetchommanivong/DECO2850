@@ -1,5 +1,13 @@
-import React, { useMemo, useState } from 'react';
-import './RecipePage.css';
+import React, { useMemo, useState } from "react";
+import {
+  View,
+  Text,
+  Image,
+  TextInput,
+  ScrollView,
+  TouchableOpacity,
+  StyleSheet,
+} from "react-native";
 
 import lasagnaImg from "./assets/Images/lasagna.jpg";
 import appleFrittersImg from "./assets/Images/fritters.jpg";
@@ -10,227 +18,259 @@ import breakfastImg from "./assets/Images/breakfast.jpg";
 import dessertImg from "./assets/Images/dessert.jpg";
 import snackImg from "./assets/Images/snack.jpg";
 
-export default function Recipes({
-  // extra for later
+export default function RecipePage({
   onSelectRecipe,
   onSelectCourse,
-  delegatedColor = '#2ecc71', // household member color (green for now, supposing user selected green
+  delegatedColor = "#2ecc71",
 }) {
-  // Sample items rn
-  const suggestedRecipes = useMemo(() => ([
-    {
-      id: 'spinach-cheese-lasagna',
-      title: 'Spinach & Cheese Lasagna',
-      image: lasagnaImg,
-      count: 4,
-      hasDelegatedItems: true,
-      memberColor: delegatedColor,
-    },
-    {
-      id: 'apple-fritters',
-      title: 'Apple Fritters',
-      image: appleFrittersImg,
-      count: 2,
-      hasDelegatedItems: false,
-    },
-    {
-      id: 'apple-pie',
-      title: 'Apple Pie',
-      image: applePieImg,
-      count: 3,
-      hasDelegatedItems: true,
-      memberColor: delegatedColor,
-    },
-  ]), [delegatedColor]);
+  const suggestedRecipes = useMemo(
+    () => [
+      {
+        id: "spinach-cheese-lasagna",
+        title: "Spinach & Cheese Lasagna",
+        image: lasagnaImg,
+        count: 4,
+        hasDelegatedItems: true,
+        memberColor: delegatedColor,
+      },
+      {
+        id: "apple-fritters",
+        title: "Apple Fritters",
+        image: appleFrittersImg,
+        count: 2,
+        hasDelegatedItems: false,
+      },
+      {
+        id: "apple-pie",
+        title: "Apple Pie",
+        image: applePieImg,
+        count: 3,
+        hasDelegatedItems: true,
+        memberColor: delegatedColor,
+      },
+    ],
+    [delegatedColor]
+  );
 
-  const ingredientOptions = useMemo(() => ([
-    'Apple',
-    'Banana',
-    'Beef (ground)',
-    'Cheese (brie)',
-    'Cheese (mozzarella)',
-    'Chicken (breast)',
-  ]), []);
+  const ingredientOptions = useMemo(
+    () => [
+      "Apple",
+      "Banana",
+      "Beef (ground)",
+      "Cheese (brie)",
+      "Cheese (mozzarella)",
+      "Chicken (breast)",
+    ],
+    []
+  );
 
-  const courses = useMemo(() => ([
-    {
-      id: 'main',
-      title: 'Main',
-      image: mainCourseImg,
-    },
-    {
-      id: 'breakfast',
-      title: 'Breakfast',
-      image: breakfastImg,
-    },
-    {
-      id: 'dessert',
-      title: 'Dessert',
-      image: dessertImg,
-    },
-    {
-      id: 'snack',
-      title: 'Snack',
-      image: snackImg,
-    },
-  ]), []);
+  const courses = useMemo(
+    () => [
+      { id: "main", title: "Main", image: mainCourseImg },
+      { id: "breakfast", title: "Breakfast", image: breakfastImg },
+      { id: "dessert", title: "Dessert", image: dessertImg },
+      { id: "snack", title: "Snack", image: snackImg },
+    ],
+    []
+  );
 
-  // UI state
   const [infoOpen, setInfoOpen] = useState(false);
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useState("");
 
-  // just filters the checkbox list itself
-  const filteredIngredientOptions = useMemo(() => {
+  const filteredIngredients = useMemo(() => {
     const q = search.trim().toLowerCase();
-    if (!q) return ingredientOptions;
-    return ingredientOptions.filter(i => i.toLowerCase().includes(q));
+    return q
+      ? ingredientOptions.filter((i) => i.toLowerCase().includes(q))
+      : ingredientOptions;
   }, [ingredientOptions, search]);
 
-  const handleRecipeClick = (recipe) => {
-    if (onSelectRecipe) onSelectRecipe(recipe);
-    else {
-      // Replace later
-      console.log('Open recipe detail:', recipe);
-    }
-  };
-
-  const handleCourseClick = (course) => {
-    if (onSelectCourse) onSelectCourse(course);
-    else {
-      console.log('Filter by course:', course);
-    }
-  };
+  const handleRecipeClick = (r) =>
+    onSelectRecipe ? onSelectRecipe(r) : console.log("Recipe:", r);
+  const handleCourseClick = (c) =>
+    onSelectCourse ? onSelectCourse(c) : console.log("Course:", c);
 
   return (
-    <main className="recipesPage" aria-label="Recipes">
-      {/* Header (Title + Info Row) */}
-      <header className="pageHeader">
-        <h1 className="pageTitle">Recipes</h1>
+    <ScrollView
+      style={{ flex: 1, backgroundColor: "#fff" }}
+      contentContainerStyle={{ padding: 20 }}
+    >
+      {/* Header */}
+      <Text style={styles.title}>Recipes</Text>
 
-        <div className="infoRow" aria-live="polite">
-          <div className="infoLeft">
-            <span className="sublabel" id="suggestedLabel">Suggested</span>
-            <button
-              className="infoBtn"
-              aria-expanded={infoOpen}
-              aria-controls="suggestedInfoText"
-              title="What does Suggested mean?"
-              onClick={() => setInfoOpen(v => !v)}
-            >
-              i
-            </button>
-          </div>
+      <TouchableOpacity onPress={() => setInfoOpen((v) => !v)}>
+        <Text style={styles.infoToggle}>
+          ℹ️ Suggested — tap for info
+        </Text>
+      </TouchableOpacity>
+      {infoOpen && (
+        <Text style={styles.infoText}>
+          Suggested recipes are based on your claimed items and their expiry
+          dates.
+        </Text>
+      )}
 
-          <p
-            id="suggestedInfoText"
-            className={`infoText ${infoOpen ? '' : 'isHidden'}`}
-            role="note"
-            aria-hidden={!infoOpen}
+      {/* Suggested Recipes Carousel */}
+      <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+        {suggestedRecipes.map((recipe) => (
+          <TouchableOpacity
+            key={recipe.id}
+            style={styles.recipeCard}
+            onPress={() => handleRecipeClick(recipe)}
           >
-            Suggested items are based off the number of items you’ve claimed, and how close they are to expiry.
-          </p>
-        </div>
-      </header>
-
-      {/* HorizontalScrollView “Suggested” (cards) */}
-      <section className="carouselSection" aria-label="Suggested recipes">
-        <div className="carousel" id="suggestedCarousel" tabIndex={0}>
-          {suggestedRecipes.map(recipe => (
-            <article
-              key={recipe.id}
-              className="recipeCard"
-              role="button"
-              tabIndex={0}
-              aria-label={`${recipe.title}, ${recipe.count} items`}
-              onClick={() => handleRecipeClick(recipe)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  e.preventDefault();
-                  handleRecipeClick(recipe);
-                }
-              }}
-            >
-              <div className="media">
-                <img src={recipe.image} alt={recipe.title} />
-              </div>
-              <div className="overlay" />
-              <div className="title">{recipe.title}</div>
-              <div className="badge">{recipe.count}</div>
+            <Image source={recipe.image} style={styles.recipeImage} />
+            <View style={styles.recipeOverlay}>
+              <Text style={styles.recipeTitle}>{recipe.title}</Text>
+              <View style={styles.recipeBadge}>
+                <Text style={styles.badgeText}>{recipe.count}</Text>
+              </View>
               {recipe.hasDelegatedItems && (
-                <div
-                  className="sideTab"
-                  style={{ background: recipe.memberColor ?? delegatedColor }}
+                <View
+                  style={[
+                    styles.sideTab,
+                    { backgroundColor: recipe.memberColor ?? delegatedColor },
+                  ]}
                 />
               )}
-            </article>
-          ))}
-        </div>
-      </section>
+            </View>
+          </TouchableOpacity>
+        ))}
+      </ScrollView>
 
-      {/* Ingredient Filter (search + checkboxes) */}
-      <section className="filterSection" aria-label="Select Ingredients">
-        <h2 className="sectionTitle">Select Ingredients</h2>
+      {/* Ingredient Filter */}
+      <Text style={styles.sectionHeader}>Select Ingredients</Text>
+      <TextInput
+        placeholder="Search ingredients"
+        value={search}
+        onChangeText={setSearch}
+        style={styles.searchInput}
+      />
 
-        <div className="searchbar">
-          <input
-            id="ingredientSearch"
-            type="search"
-            placeholder="Search ingredients"
-            aria-label="Search ingredients"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            autoComplete="off"
-          />
-          <span className="searchIcon" aria-hidden="true">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
-                 stroke="currentColor" strokeWidth="2"
-                 strokeLinecap="round" strokeLinejoin="round">
-              <path d="M22 3H2l8 9v7l4 2v-9l8-9z"></path>
-            </svg>
-          </span>
-        </div>
+      <View style={styles.checkboxGrid}>
+        {filteredIngredients.map((name, idx) => (
+          <View key={idx} style={styles.checkboxRow}>
+            <View style={styles.checkboxBox} />
+            <Text style={styles.checkboxLabel}>{name}</Text>
+          </View>
+        ))}
+      </View>
 
-        <div className="checkboxGrid" role="group" aria-label="Ingredients">
-          {filteredIngredientOptions.map((name, idx) => {
-            const id = `ing-${idx}`;
-            return (
-              <div key={id} className="checkbox">
-                <input id={id} type="checkbox" value={name} />
-                <label htmlFor={id}>{name}</label>
-              </div>
-            );
-          })}
-        </div>
-      </section>
-
-      {/* HorizontalScrollView “Course” (cards) */}
-      <section className="carouselSection" aria-label="Course">
-        <h2 className="sectionTitle">Course</h2>
-        <div className="carousel courseCarousel" id="courseCarousel" tabIndex={0}>
-          {courses.map(course => (
-            <article
-              key={course.id}
-              className="courseCard"
-              role="button"
-              tabIndex={0}
-              aria-label={course.title}
-              onClick={() => handleCourseClick(course)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  e.preventDefault();
-                  handleCourseClick(course);
-                }
-              }}
-            >
-              <div className="media">
-                <img src={course.image} alt={course.title} />
-              </div>
-              <div className="overlay" />
-              <div className="title">{course.title}</div>
-            </article>
-          ))}
-        </div>
-      </section>
-    </main>
+      {/* Course Carousel */}
+      <Text style={styles.sectionHeader}>Course</Text>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+        {courses.map((course) => (
+          <TouchableOpacity
+            key={course.id}
+            style={styles.courseCard}
+            onPress={() => handleCourseClick(course)}
+          >
+            <Image source={course.image} style={styles.courseImage} />
+            <View style={styles.courseOverlay}>
+              <Text style={styles.courseTitle}>{course.title}</Text>
+            </View>
+          </TouchableOpacity>
+        ))}
+      </ScrollView>
+    </ScrollView>
   );
 }
+
+const styles = StyleSheet.create({
+  title: {
+    fontSize: 28,
+    fontWeight: "bold",
+    marginBottom: 8,
+  },
+  infoToggle: {
+    color: "#007AFF",
+    marginBottom: 5,
+  },
+  infoText: {
+    fontSize: 14,
+    color: "#444",
+    marginBottom: 15,
+  },
+  recipeCard: {
+    width: 180,
+    height: 200,
+    marginRight: 15,
+    borderRadius: 12,
+    overflow: "hidden",
+  },
+  recipeImage: { width: "100%", height: "100%" },
+  recipeOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: "flex-end",
+    backgroundColor: "rgba(0,0,0,0.25)",
+    padding: 10,
+  },
+  recipeTitle: {
+    color: "white",
+    fontWeight: "600",
+    fontSize: 16,
+  },
+  recipeBadge: {
+    position: "absolute",
+    top: 10,
+    right: 10,
+    backgroundColor: "#2ecc71",
+    borderRadius: 10,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+  },
+  badgeText: { color: "white", fontWeight: "bold" },
+  sideTab: {
+    position: "absolute",
+    left: 0,
+    top: 0,
+    bottom: 0,
+    width: 5,
+  },
+  sectionHeader: {
+    fontSize: 22,
+    fontWeight: "bold",
+    marginTop: 20,
+    marginBottom: 8,
+  },
+  searchInput: {
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    marginBottom: 15,
+  },
+  checkboxGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    marginBottom: 25,
+  },
+  checkboxRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    width: "48%",
+    marginBottom: 8,
+  },
+  checkboxBox: {
+    width: 18,
+    height: 18,
+    borderWidth: 1,
+    borderColor: "#888",
+    marginRight: 8,
+  },
+  checkboxLabel: { fontSize: 15 },
+  courseCard: {
+    width: 150,
+    height: 150,
+    marginRight: 15,
+    borderRadius: 12,
+    overflow: "hidden",
+  },
+  courseImage: { width: "100%", height: "100%" },
+  courseOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(0,0,0,0.25)",
+    justifyContent: "flex-end",
+    padding: 10,
+  },
+  courseTitle: { color: "white", fontWeight: "600", fontSize: 16 },
+});
