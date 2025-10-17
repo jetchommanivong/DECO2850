@@ -15,7 +15,7 @@ export default function InventoryPage() {
   const [selectedMember, setSelectedMember] = useState(null);
   const [transcript, setTranscript] = useState("");
   const [isRecording, setIsRecording] = useState(false);
-  const [toast, setToast] = useState({ message: "", type: "" });
+  const [toast, setToast] = useState({ message: "", type: "" }); 
 
   const showToast = (message, type = "success") => {
     setToast({ message, type });
@@ -100,61 +100,6 @@ const handleStartLogging = () => {
         message: "⚠️ No speech detected. Please try again.",
       });
     }
-
-    const SpeechRecognition =
-      window.SpeechRecognition || window.webkitSpeechRecognition;
-    const recognition = new SpeechRecognition();
-
-    recognition.continuous = true;
-    recognition.interimResults = true;
-    recognition.lang = "en-AU";
-    recognition.maxAlternatives = 1;
-
-    let finalTranscript = "";
-    let silenceTimer = null;
-    const silenceDelay = 5000;
-
-    setIsRecording(true);
-
-    recognition.onstart = () => {
-      console.log("🎙️ Listening...");
-    };
-
-    recognition.onresult = (event) => {
-      clearTimeout(silenceTimer);
-
-      const transcript = Array.from(event.results)
-        .map((r) => r[0].transcript)
-        .join(" ")
-        .trim();
-
-      finalTranscript = transcript;
-      setTranscript(transcript);
-
-      silenceTimer = setTimeout(() => {
-        console.log("⏹️ Auto-stopping after silence");
-        recognition.stop();
-      }, silenceDelay);
-    };
-
-    recognition.onerror = (event) => {
-      console.error("Speech recognition error:", event.error);
-      setIsRecording(false);
-    };
-
-    recognition.onend = () => {
-      console.log("🛑 Recognition ended");
-      clearTimeout(silenceTimer);
-      setIsRecording(false);
-
-      if (finalTranscript.trim() === "") {
-        setToast({ type: "error", message: "No speech detected. Try again." });
-      } else {
-        setToast({ type: "success", message: "Voice captured successfully!" });
-      }
-    };
-
-    recognition.start();
   };
 
   recog.start();
