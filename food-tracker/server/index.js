@@ -151,17 +151,7 @@ function validateTranscript(parsed, selectedMemberId, inventory, membersItems, h
         check: `Item ${i + 1} validation`,
         message: `${item.itemName || 'Unknown item'}: ${itemErrors.join('; ')}`
       });
-    } else {
-      validatedItems.push({
-        member: selectedMemberId,
-        action: item.action,
-        item: item.itemId,
-        itemName: item.itemName,
-        quantity: item.quantity,
-        unit: item.unit.trim(),
-        category: item.category || "Other" // default category if not provided
-      });
-    }
+    } 
   }
 
   if (errors.length > 0) {
