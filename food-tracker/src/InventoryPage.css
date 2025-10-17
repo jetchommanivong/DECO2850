@@ -309,3 +309,30 @@ button {
 h1 {
   margin-bottom: 1.5rem;
 }
+
+.member-btn {
+  background-color: #4c8bf5;
+  color: white;
+  border: none;
+  padding: 10px 18px;
+  border-radius: 6px;
+  margin: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.member-btn:hover {
+  background-color: #3b73d9;
+}
+
+.logging-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  gap: 12px;
+}
+
+.logging-header p {
+  margin: 0;
+}
