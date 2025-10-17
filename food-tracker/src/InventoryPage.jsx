@@ -43,8 +43,12 @@ export default function InventoryPage({ items, onUpdateQuantity, onAddItem }) {
     { member_id: 3, member_name: "John" },
   ];
 
-  // --- Voice Recording ---
-  const handleStartLogging = () => {
+  // Keep this outside the component scope
+// --- Add this to your component’s useState section ---
+const [recognition, setRecognition] = useState(null);
+
+// --- Replace your old handleStartLogging and handleStopLogging with these ---
+const handleStartLogging = () => {
   if (!window.SpeechRecognition && !window.webkitSpeechRecognition) {
     alert("Your browser doesn't support speech recognition.");
     return;
@@ -52,61 +56,67 @@ export default function InventoryPage({ items, onUpdateQuantity, onAddItem }) {
 
   const SpeechRecognition =
     window.SpeechRecognition || window.webkitSpeechRecognition;
-  const recognition = new SpeechRecognition();
+  const recog = new SpeechRecognition();
 
-  recognition.continuous = true;       // 🔹 keeps listening until manually stopped
-  recognition.interimResults = true;   // 🔹 gives live feedback as user speaks
-  recognition.lang = "en-AU";          // adjust if you want different accent
-  recognition.maxAlternatives = 1;
+  recog.continuous = true;
+  recog.interimResults = false;
+  recog.lang = "en-AU";
+  recog.maxAlternatives = 1;
 
   let finalTranscript = "";
-  let silenceTimer = null;
-  const silenceDelay = 5000; // 🔹 5 seconds of silence before stopping
 
-  setIsRecording(true);
-
-  recognition.onstart = () => {
-    console.log("🎙️ Listening...");
+  recog.onstart = () => {
+    setIsRecording(true);
+    setToast({ type: "info", message: "🎤 Recording started — speak now!" });
+    console.log("🎤 Listening...");
   };
 
-  recognition.onresult = (event) => {
-    clearTimeout(silenceTimer);
-
-    // combine results
-    const transcript = Array.from(event.results)
+  recog.onresult = (event) => {
+    finalTranscript = Array.from(event.results)
       .map((r) => r[0].transcript)
       .join(" ")
       .trim();
-
-    finalTranscript = transcript;
-    setTranscript(transcript);
-
-    // reset the silence timer every time user speaks
-    silenceTimer = setTimeout(() => {
-      console.log("⏹️ Auto-stopping after silence");
-      recognition.stop();
-    }, silenceDelay);
   };
 
-  recognition.onerror = (event) => {
+  recog.onerror = (event) => {
     console.error("Speech recognition error:", event.error);
+    setToast({
+      type: "error",
+      message: `Speech recognition error: ${event.error}`,
+    });
     setIsRecording(false);
   };
 
-  recognition.onend = () => {
-    console.log("🛑 Recognition ended");
-    clearTimeout(silenceTimer);
+  recog.onend = () => {
+    console.log("🛑 Recognition stopped");
     setIsRecording(false);
+    setRecognition(null);
 
-    if (finalTranscript.trim() === "") {
-      setToast({ type: "error", message: "No speech detected. Try again." });
+    if (finalTranscript.trim()) {
+      setTranscript(finalTranscript);
+      setToast({ type: "success", message: "✅ Voice captured successfully!" });
     } else {
-      setToast({ type: "success", message: "Voice captured successfully!" });
+      setToast({
+        type: "error",
+        message: "⚠️ No speech detected. Please try again.",
+      });
     }
   };
 
-  recognition.start();
+  recog.start();
+  setRecognition(recog);
 };
+
+const handleStopLogging = () => {
+  if (recognition) {
+    recognition.stop();
+    setToast({ type: "info", message: "🛑 Recording stopped." });
+    console.log("Manual stop triggered");
+  } else {
+    console.warn("⚠️ No active recognition instance found");
+  }
+};
+
 
 
   // --- Parse transcript ---
@@ -242,141 +252,101 @@ export default function InventoryPage({ items, onUpdateQuantity, onAddItem }) {
       </div>
     )}
 
-    {/* ✅ Voice Logging */}
-    <div className="voice-logging-section">
-      {!showMemberSelection ? (
-        <button
-          onClick={() => setShowMemberSelection(true)}
-          className="primary-btn"
-        >
-          Log
-        </button>
-      ) : (
-        <div className="member-selection">
-          {!selectedMember ? (
-            <div>
-              <p>Who are you logging as?</p>
-              <div className="household-member">
-                {householdMembers.map((m) => (
-                  <button
-                    key={m.member_id}
-                    onClick={() => setSelectedMember(m)}
-                    className={
-                      selectedMember?.member_id === m.member_id ? "selected" : ""
-                    }
-                  >
-                    {m.member_name}
-                  </button>
-                ))}
-              </div>
-              <button
-                onClick={() => setShowMemberSelection(false)}
-                className="cancel-button"
-              >
-                Cancel
+          {/* Voice logging section */}
+      <div className="voice-logging-section">
+        {!showMemberSelection ? (
+          <button onClick={() => setShowMemberSelection(true)} className="primary-btn">
+            Log
+          </button>
+        ) : !selectedMember ? (
+          <div>
+            <p>Who are you logging as?</p>
+            {householdMembers.map((m) => (
+              <button key={m.member_id} onClick={() => setSelectedMember(m)} className="member-btn">
+                {m.member_name}
+              </button>
+            ))}
+            <button onClick={() => setShowMemberSelection(false)} className="cancel-button">
+              Cancel
+            </button>
+          </div>
+        ) : (
+          <div>
+            <div className="logging-header">
+              <p>
+                <strong>Logging for:</strong> {selectedMember.member_name}
+              </p>
+              <button onClick={() => setSelectedMember(null)} className="secondary-btn">
+                Change User
               </button>
             </div>
-          ) : (
-            <div className="log-prompt">
-              <div className="log-for">
-                <div className="log-info">
-                  <strong>Logging for:</strong>
-                  <span>{selectedMember.member_name}</span>
-                </div>
-                <button className="change-user-btn" onClick={() => setSelectedMember(null)}>
-                  Change User
-                </button>
-              </div>
 
-
-              {!transcript ? (
-                <div className="mic-section">
-                  {!isRecording ? (
-                    <button
-                      onClick={handleStartLogging}
-                      className="primary-btn"
-                    >
-                      🎤 Start Logging
-                    </button>
-                  ) : (
+            {!transcript ? (
+              <div className="mic-section">
+                {!isRecording ? (
+                  <button onClick={handleStartLogging} className="primary-btn">
+                    🎤 Start Logging
+                  </button>
+                ) : (
+                  <>
                     <div className="mic-visual">
                       <div className="mic-dot" />
                       <p>Listening...</p>
                     </div>
-                  )}
-                </div>
-              ) : (
-                <div>
-                  <p>Detected: "{transcript}"</p>
-                  <button
-                    onClick={handleParseTranscript}
-                    disabled={loading}
-                    className="primary-btn"
-                  >
-                    {loading ? "Processing..." : "Confirm & Process"}
-                  </button>
-                  <button
-                    onClick={() => setTranscript("")}
-                    className="secondary-btn"
-                  >
-                    Try Again
-                  </button>
-                </div>
-              )}
+                    <button onClick={handleStopLogging} className="secondary-btn">
+                      ⏹ Stop Logging
+                    </button>
+                  </>
+                )}
+              </div>
+            ) : (
+              <>
+                <p>Detected: "{transcript}"</p>
+                <button onClick={handleParseTranscript} disabled={loading} className="primary-btn">
+                  {loading ? "Processing..." : "Confirm & Process"}
+                </button>
+                <button onClick={() => setTranscript("")} className="secondary-btn">
+                  Try Again
+                </button>
+              </>
+            )}
 
-              <button
-                onClick={() => setShowMemberSelection(false)}
-                className="cancel-button"
-              >
-                Cancel
-              </button>
+            <button onClick={() => setShowMemberSelection(false)} className="cancel-button">
+              Cancel
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* JSON result display */}
+      {resultJSON && resultJSON.log && (
+        <div className="result-section">
+          <h3>Action Summary</h3>
+          {resultJSON.log.map((entry, idx) => (
+            <div key={idx} className={`result-card ${entry.status}`}>
+              <p className="result-description">{entry.description}</p>
+              {entry.data && entry.data.length > 0 ? (
+                <ul className="result-list">
+                  {entry.data.map((item, i) => (
+                    <li key={i} className="result-item">
+                      <strong>
+                        {householdMembers.find((m) => m.member_id === item.member)?.member_name || "Someone"}
+                      </strong>{" "}
+                      {item.action === "add" ? "added" : "removed"}{" "}
+                      <strong>{item.quantity} {item.unit}</strong> of{" "}
+                      <strong>{item.itemName}</strong> ({item.category})
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="result-empty">No valid items were processed.</p>
+              )}
             </div>
-          )}
+          ))}
         </div>
       )}
     </div>
-
-    {/* ✅ Result Section */}
-    {resultJSON && resultJSON.log && (
-      <div className="result-section">
-        <h3>Action Summary</h3>
-        {resultJSON.log.map((entry, idx) => (
-          <div
-            key={idx}
-            className={`result-card ${
-              entry.status === "success" ? "success" : "error"
-            }`}
-          >
-            <p className="result-description">{entry.description}</p>
-            {entry.data && entry.data.length > 0 ? (
-              <ul className="result-list">
-                {entry.data.map((item, i) => (
-                  <li key={i} className="result-item">
-                    <strong>
-                      {householdMembers.find(
-                        (m) => m.member_id === item.member
-                      )?.member_name || "Someone"}
-                    </strong>{" "}
-                    {item.action === "add" ? "added" : "removed"}{" "}
-                    <strong>
-                      {item.quantity} {item.unit}
-                    </strong>{" "}
-                    of <strong>{item.itemName}</strong> ({item.category})
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="result-empty">
-                {entry.status === "unsuccessful"
-                  ? "❌ Could not process your request. Try again."
-                  : "No valid items were processed."}
-              </p>
-            )}
-          </div>
-        ))}
-      </div>
-    )}
-  </div>
-);
-
+  );
 }
+
+
