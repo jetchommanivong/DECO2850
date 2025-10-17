@@ -1,6 +1,9 @@
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { useNavigation, useNavigationState } from "@react-navigation/native";
+import { useNavigate, useLocation } from "react-router-dom";
+import "./NavBar.css";
+import { Home, Book, ClipboardList, Receipt, Image, Users } from "lucide-react";
 
 export default function NavBar() {
   const navigation = useNavigation();
@@ -74,4 +77,3 @@ const styles = StyleSheet.create({
     color: "#555",
   },
 });
- 
