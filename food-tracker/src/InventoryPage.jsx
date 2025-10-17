@@ -1,8 +1,13 @@
 import React, { useState } from "react";
 import { PieChart, Pie, Cell, Tooltip, Legend } from "recharts";
+import { useItems, useMembers, store } from "./store";
 import "./InventoryPage.css";
 
-export default function InventoryPage({ items, onUpdateQuantity, onAddItem }) {
+export default function InventoryPage() {
+  // Get data from store
+  const items = useItems();
+  const householdMembers = useMembers();
+
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [resultJSON, setResultJSON] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -36,12 +41,6 @@ export default function InventoryPage({ items, onUpdateQuantity, onAddItem }) {
     Fruits: "#FF9800",
     Other: "#9E9E9E",
   };
-
-  const householdMembers = [
-    { member_id: 1, member_name: "Jack" },
-    { member_id: 2, member_name: "Jill" },
-    { member_id: 3, member_name: "John" },
-  ];
 
   // Keep this outside the component scope
 // --- Add this to your component’s useState section ---
@@ -101,6 +100,61 @@ const handleStartLogging = () => {
         message: "⚠️ No speech detected. Please try again.",
       });
     }
+
+    const SpeechRecognition =
+      window.SpeechRecognition || window.webkitSpeechRecognition;
+    const recognition = new SpeechRecognition();
+
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = "en-AU";
+    recognition.maxAlternatives = 1;
+
+    let finalTranscript = "";
+    let silenceTimer = null;
+    const silenceDelay = 5000;
+
+    setIsRecording(true);
+
+    recognition.onstart = () => {
+      console.log("🎙️ Listening...");
+    };
+
+    recognition.onresult = (event) => {
+      clearTimeout(silenceTimer);
+
+      const transcript = Array.from(event.results)
+        .map((r) => r[0].transcript)
+        .join(" ")
+        .trim();
+
+      finalTranscript = transcript;
+      setTranscript(transcript);
+
+      silenceTimer = setTimeout(() => {
+        console.log("⏹️ Auto-stopping after silence");
+        recognition.stop();
+      }, silenceDelay);
+    };
+
+    recognition.onerror = (event) => {
+      console.error("Speech recognition error:", event.error);
+      setIsRecording(false);
+    };
+
+    recognition.onend = () => {
+      console.log("🛑 Recognition ended");
+      clearTimeout(silenceTimer);
+      setIsRecording(false);
+
+      if (finalTranscript.trim() === "") {
+        setToast({ type: "error", message: "No speech detected. Try again." });
+      } else {
+        setToast({ type: "success", message: "Voice captured successfully!" });
+      }
+    };
+
+    recognition.start();
   };
 
   recog.start();
@@ -164,19 +218,38 @@ const handleStopLogging = () => {
             (i) => i.name.toLowerCase() === item.itemName.toLowerCase()
           );
           if (match) {
-            onUpdateQuantity(match.id, item.quantity);
+            // Use store action instead
+            store.actions.items.updateQuantity(match.id, item.quantity);
+            
+            // Log the action
+            store.actions.logs.add({
+              memberId: selectedMember.member_id,
+              action: "remove",
+              itemName: item.itemName,
+              quantity: item.quantity
+            });
+            
             removedItems.push(`${item.quantity} ${item.unit} of ${item.itemName}`);
           } else {
             console.warn(`⚠️ Could not find ${item.itemName} in inventory.`);
           }
         } else if (item.action === "add") {
-          onAddItem({
-            id: Date.now().toString(),
+          // Use store action instead
+          store.actions.items.addOrMerge({
             name: item.itemName,
             category: item.category || "Other",
             quantity: item.quantity,
             unit: item.unit,
           });
+          
+          // Log the action
+          store.actions.logs.add({
+            memberId: selectedMember.member_id,
+            action: "add",
+            itemName: item.itemName,
+            quantity: item.quantity
+          });
+          
           addedItems.push(`${item.quantity} ${item.unit} of ${item.itemName}`);
         }
       });

@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useItems, useMembers, useUsageLogs, store } from "./store";
 import "./Household.css";
 import UserPopup from "./UserPopup";
 import ItemPopup from "./ItemPopup";
@@ -20,27 +21,15 @@ import User2 from "./assets/Avatar/User 2.png";
 import User4 from "./assets/Avatar/User 4.png";
 import User5 from "./assets/Avatar/User 5.png";
 
+const AVATAR_OPTIONS = [User1, User2, User4, User5];
+
 export default function Household() {
-  const [users, setUsers] = useState([
-    { id: 1, name: "John", avatar: User1, claimed: ["Milk"], meals: [] },
-    { id: 2, name: "Mia", avatar: User2, claimed: ["Apple"], meals: [] },
-    { id: 3, name: "You", avatar: User4, claimed: ["Cheese"], meals: [] },
-    { id: 4, name: "Josh", avatar: User5, claimed: ["Broccoli"], meals: [] },
-  ]);
+  // Get data from store
+  const items = useItems();
+  const members = useMembers();
+  const usageLogs = useUsageLogs();
 
-  const [activity, setActivity] = useState([
-    "Mia claimed Apple",
-    "You claimed Milk",
-    "Josh claimed Broccoli",
-  ]);
-  
-  const [items, setItems] = useState([
-    { id: 1, name: "Apple", claimedBy: ["Mia"] },
-    { id: 2, name: "Milk", claimedBy: ["John", "You"] },
-    { id: 3, name: "Cheese", claimedBy: ["You"] },
-    { id: 4, name: "Broccoli", claimedBy: ["Josh"] },
-  ]);
-
+  // Local state for UI (meal plans stay local for now unless you want to add to store)
   const [mealPlans, setMealPlans] = useState([
     { id: 1, date: "2025-09-16", meal: "Chicken Curry", planner: "Josh", joined: ["John"] },
     { id: 2, date: "2025-09-17", meal: "Fried Rice", planner: "Mia", joined: [] },
@@ -52,9 +41,63 @@ export default function Household() {
   const [searchTerm, setSearchTerm] = useState("");
   const [showInvitePopup, setShowInvitePopup] = useState(false);
 
+  // Create a user display list with avatars
+  const [userAvatars, setUserAvatars] = useState({});
+
+  useEffect(() => {
+    // Assign avatars to members who don't have one yet
+    const newAvatars = { ...userAvatars };
+    members.forEach((member, idx) => {
+      if (!newAvatars[member.member_id]) {
+        newAvatars[member.member_id] = AVATAR_OPTIONS[idx % AVATAR_OPTIONS.length];
+      }
+    });
+    setUserAvatars(newAvatars);
+  }, [members]);
+
+  // Convert members to display format
+  const users = members.map(m => {
+    const claimed = items
+      .filter(item => item.claimedBy?.includes(m.member_name))
+      .map(item => item.name);
+
+    const userMeals = mealPlans.filter(
+      plan => plan.planner === m.member_name || plan.joined.includes(m.member_name)
+    );
+
+    return {
+      id: m.member_id,
+      name: m.member_name,
+      avatar: userAvatars[m.member_id] || User1,
+      claimed,
+      meals: userMeals,
+    };
+  });
+
+  // Build activity log from usage logs
+  const activity = usageLogs
+    .slice()
+    .reverse()
+    .slice(0, 10) // Show last 10 activities
+    .map((log) => {
+      const member = members.find(m => m.member_id === log.memberId);
+      const userName = member?.member_name || "Someone";
+      
+      if (log.action === "add") {
+        return `${userName} added ${log.quantity} of ${log.itemName}`;
+      } else if (log.action === "remove") {
+        return `${userName} removed ${log.quantity} of ${log.itemName}`;
+      }
+      return `${userName} ${log.action} ${log.itemName}`;
+    });
+
+  // Filter items based on search
   const filteredItems = items.filter(item =>
     item.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  // Get current user (assuming it's the first "You" member or last added)
+  const currentUser = members.find(m => m.member_name === "You") || members[0];
 
   return (
     <div className="household-page">
@@ -78,19 +121,21 @@ export default function Household() {
             </div>
           ))}
           <div className="user-avatar" onClick={() => setShowInvitePopup(true)}>
-              <div className="invite-btn">
-                <img src={InviteIcon} alt="Invite" />
-              </div>
-              <span>Add a mate!</span>
+            <div className="invite-btn">
+              <img src={InviteIcon} alt="Invite" />
             </div>
+            <span>Add a mate!</span>
           </div>
+        </div>
 
         {/* Activity */}
         <h2>Activity</h2>
         <ul className="activity-log">
-          {activity.map((a, i) => (
-            <li key={i}>{a}</li>
-          ))}
+          {activity.length > 0 ? (
+            activity.map((a, i) => <li key={i}>{a}</li>)
+          ) : (
+            <li>No activity yet</li>
+          )}
         </ul>
 
         {/* Items with search */}
@@ -109,9 +154,11 @@ export default function Household() {
             <li key={item.id} onClick={() => setSelectedItem(item)}>
               {item.name}
               <div className="claimed-icons">
-                {item.claimedBy.map((u) => {
-                  const usr = users.find((x) => x.name === u);
-                  return <img key={u} src={usr?.avatar} alt={u} />;
+                {item.claimedBy?.map((userName) => {
+                  const usr = users.find((x) => x.name === userName);
+                  return usr ? (
+                    <img key={userName} src={usr.avatar} alt={userName} />
+                  ) : null;
                 })}
               </div>
             </li>
@@ -122,11 +169,11 @@ export default function Household() {
         <div className="meal-plan-header">
           <h2>Meal Plan</h2>
           <button
-          onClick={() => setShowMealForm(true)}
-          className="add-meal-btn"
-        >
-          <img src={AddPng} alt="Add Meal" />
-        </button>
+            onClick={() => setShowMealForm(true)}
+            className="add-meal-btn"
+          >
+            <img src={AddPng} alt="Add Meal" />
+          </button>
         </div>
         <ul className="meal-plan">
           {mealPlans.map((m) => (
@@ -142,29 +189,28 @@ export default function Household() {
 
               <div className="meal-actions">
                 <div className="joined-icons">
-                  {m.joined.map((u) => {
-                    const usr = users.find((x) => x.name === u);
-                    return <img key={u} src={usr?.avatar} alt={u} />;
+                  {m.joined.map((userName) => {
+                    const usr = users.find((x) => x.name === userName);
+                    return usr ? (
+                      <img key={userName} src={usr.avatar} alt={userName} />
+                    ) : null;
                   })}
                 </div>
                 <button
                   className="join-btn"
                   onClick={() => {
-                  if (!m.joined.includes("You")) {
-                    setMealPlans((prev) =>
-                      prev.map((plan) =>
-                        plan.id === m.id
-                          ? { ...plan, joined: [...plan.joined, "You"] }
-                          : plan
-                      )
-                    );
-                    setActivity((prev) => [
-                      `You joined a meal plan (${m.meal})`,
-                      ...prev,
-                    ]);  
-                    alert("🎉 You’ve been added to this meal plan!");
-                  }
-                }}
+                    const currentUserName = currentUser?.member_name || "You";
+                    if (!m.joined.includes(currentUserName)) {
+                      setMealPlans((prev) =>
+                        prev.map((plan) =>
+                          plan.id === m.id
+                            ? { ...plan, joined: [...plan.joined, currentUserName] }
+                            : plan
+                        )
+                      );
+                      alert("🎉 You've been added to this meal plan!");
+                    }
+                  }}
                 >
                   Join
                 </button>
@@ -176,80 +222,62 @@ export default function Household() {
         {/* Popups */}
         {selectedUser && (
           <UserPopup
-              user={selectedUser}
-              mealPlans={mealPlans}   // Pass mealPlans here
-              onClose={() => setSelectedUser(null)}
-          />        
+            user={selectedUser}
+            mealPlans={mealPlans}
+            onClose={() => setSelectedUser(null)}
+          />
         )}
 
         {showInvitePopup && (
           <InviteUserPopup
-            onAdd={(newUser) => setUsers((prev) => [...prev, newUser])}
+            onAdd={(newUser) => {
+              // Add member to store
+              store.actions.members.add(newUser.name);
+              
+              // Store avatar mapping
+              const newMemberId = store.getState().members.length;
+              setUserAvatars(prev => ({
+                ...prev,
+                [newMemberId]: newUser.avatar
+              }));
+            }}
             onClose={() => setShowInvitePopup(false)}
           />
         )}
-        
+
         {selectedItem && (
           <ItemPopup
-          item={selectedItem}
-          onClose={() => setSelectedItem(null)}
-          onDelete={(name) =>
-            setItems((prev) => prev.filter((i) => i.name !== name))
-          }
-          onToggleClaim={(itemName, claim) => {
-            // Update fridge items
-            setItems((prev) =>
-              prev.map((i) =>
-                i.name === itemName
-                  ? {
-                      ...i,
-                      claimedBy: claim
-                        ? [...i.claimedBy, "You"]
-                        : i.claimedBy.filter((u) => u !== "You"),
-                    }
-                  : i
-              )
-            );
+            item={selectedItem}
+            onClose={() => setSelectedItem(null)}
+            onDelete={(name) => {
+              // Remove item from store
+              store.actions.items.removeByName(name);
+            }}
+            onToggleClaim={(itemName, claim) => {
+              const currentUserName = currentUser?.member_name || "You";
+              
+              // Update item's claimedBy in store
+              store.actions.items.setClaimedByName(itemName, currentUserName, claim);
 
-            // Update user claimed items
-            setUsers((prev) =>
-              prev.map((u) =>
-                u.name === "You"
-                  ? {
-                      ...u,
-                      claimed: claim
-                        ? [...u.claimed, itemName]
-                        : u.claimed.filter((c) => c !== itemName),
-                    }
-                  : u
-              )
-            );
-
-            // Update activity log
-            setActivity((prev) => [
-              claim
-                ? `You claimed ${itemName}`
-                : `You unclaimed ${itemName}`,
-              ...prev,
-            ]);
-          }}
-        />
-
+              // Log the activity
+              store.actions.logs.add({
+                memberId: currentUser?.member_id || 0,
+                action: claim ? "claimed" : "unclaimed",
+                itemName: itemName,
+                quantity: 1
+              });
+            }}
+          />
         )}
-        
+
         {showMealForm && (
           <MealPlanForm
             onClose={() => setShowMealForm(false)}
             onAdd={(meal) => {
               setMealPlans((prev) => [...prev, meal]);
-              setActivity((prev) => [
-                `You made a meal plan (${meal.meal})`,
-                ...prev,
-              ]);  // ✅ log new plan
             }}
           />
         )}
-
       </div>
     </div>
   );
