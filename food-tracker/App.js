@@ -1,15 +1,15 @@
 import React, { useState } from "react";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import Layout from "./Layout";
+import Layout from "./src/Layout";
 
 // Screens
-import FridgeLockScreen from "./FridgeLockScreen";
-import RecipePage from "./RecipePage";
-import InventoryPage from "./InventoryPage";
-import ReceiptScan from "./ReceiptScan";
-import TempItemPhoto from "./TempItemPhoto";
-import Household from "./Household";
+import FridgeLockScreen from "./src/FridgeLockScreen";
+import RecipePage from "./src/RecipePage";
+import InventoryPage from "./src/InventoryPage";
+import ReceiptScan from "./src/ReceiptScan";
+import TempItemPhoto from "./src/TempItemPhoto";
+import Household from "./src/Household";
 
 const Stack = createNativeStackNavigator();
 

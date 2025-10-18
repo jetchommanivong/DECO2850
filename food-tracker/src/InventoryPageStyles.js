@@ -4,26 +4,58 @@ import { StyleSheet } from "react-native";
 export default StyleSheet.create({
   /* --- Page layout --- */
   inventoryPage: {
-    backgroundColor: "#fff",
     flexGrow: 1,
-    paddingVertical: 32,
-    paddingHorizontal: 20,
+    paddingVertical: 36,
+    paddingHorizontal: 22,
     alignItems: "center",
+    backgroundColor: "#fdfdfd",
     width: "100%",
+  },
+
+  pageHeader: {
+    fontSize: 26,
+    fontWeight: "700",
+    color: "#333",
+    marginBottom: 8,
   },
 
   /* --- Pie chart --- */
   chartContainer: {
-    marginVertical: 24,
+    marginVertical: 28,
     width: "100%",
     maxWidth: 500,
     alignItems: "center",
     justifyContent: "center",
+    backgroundColor: "#ffffff",
+    borderRadius: 16,
+    paddingVertical: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 10,
+    elevation: 4,
+  },
+
+  // 👆 Adds subtle card background around the pie chart
+
+  clickableHint: {
+    marginTop: 6,
+    fontSize: 13,
+    color: "#777",
+    fontStyle: "italic",
+  },
+
+  insightText: {
+    marginTop: 10,
+    fontSize: 16,
+    color: "#444",
+    fontWeight: "500",
+    textAlign: "center",
   },
 
   /* --- Category list container --- */
   categoryItems: {
-    marginTop: 24,
+    marginTop: 26,
     width: "100%",
     maxWidth: 420,
     backgroundColor: "#fafafa",
@@ -40,10 +72,8 @@ export default StyleSheet.create({
     marginBottom: 16,
     textAlign: "center",
     fontSize: 18,
-    fontWeight: "600",
-  },
-  itemList: {
-    width: "100%",
+    fontWeight: "700",
+    color: "#333",
   },
   itemRow: {
     flexDirection: "row",
@@ -59,49 +89,71 @@ export default StyleSheet.create({
   },
 
   /* --- Buttons --- */
-  button: {
-    borderRadius: 6,
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    marginVertical: 6,
-    alignItems: "center",
-  },
-  primaryBtn: {
-    backgroundColor: "#4CAF50",
-  },
-  primaryBtnText: {
-    color: "#fff",
-    fontWeight: "bold",
-  },
-  secondaryBtn: {
-    backgroundColor: "#FF9800",
-  },
-  secondaryBtnText: {
-    color: "#fff",
-    fontWeight: "bold",
-  },
-  cancelButton: {
-    backgroundColor: "#fff",
-    borderWidth: 1,
-    borderColor: "#FF4C4C",
-    borderRadius: 6,
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    alignItems: "center",
-    marginTop: 8,
-  },
-  cancelButtonText: {
-    color: "#FF4C4C",
-    fontWeight: "600",
-  },
+button: {
+  borderRadius: 6,
+  paddingVertical: 12,
+  paddingHorizontal: 24,
+  marginVertical: 6,
+  alignItems: "center",
+},
+
+primaryBtn: {
+  backgroundColor: "#4CAF50",
+  borderWidth: 1,
+  borderColor: "#4CAF50",
+  borderRadius: 6,
+  paddingVertical: 12,
+  paddingHorizontal: 24,
+  marginVertical: 6,
+  alignItems: "center",
+},
+primaryBtnText: {
+  color: "#fff",
+  fontWeight: "bold",
+},
+
+secondaryBtn: {
+  backgroundColor: "#FF9800",
+  borderWidth: 1,
+  borderColor: "#ED8D00",
+  borderRadius: 6,
+  paddingVertical: 12,
+  paddingHorizontal: 24,
+  marginVertical: 6,
+  alignItems: "center",
+},
+secondaryBtnText: {
+  color: "#fff",
+  fontWeight: "bold",
+},
+
+cancelButton: {
+  backgroundColor: "#fff",
+  borderWidth: 1,
+  borderColor: "#FF4C4C",
+  borderRadius: 6,
+  paddingVertical: 10,
+  paddingHorizontal: 20,
+  alignItems: "center",
+  marginTop: 8,
+  shadowColor: "rgba(0,0,0,0.05)",
+  shadowOffset: { width: 0, height: 1 },
+  shadowOpacity: 0.3,
+  shadowRadius: 2,
+},
+cancelButtonText: {
+  color: "#FF4C4C",
+  fontWeight: "600",
+},
+
 
   /* --- Household member buttons --- */
   householdMember: {
     flexDirection: "row",
     flexWrap: "wrap",
     justifyContent: "center",
-    gap: 16,
-    marginVertical: 20,
+    gap: 14,
+    marginVertical: 18,
   },
   householdMemberButton: {
     backgroundColor: "#fff",
@@ -111,9 +163,9 @@ export default StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 22,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 2,
     elevation: 2,
   },
   householdMemberButtonText: {
@@ -134,9 +186,9 @@ export default StyleSheet.create({
     backgroundColor: "#e8f5e9",
     borderLeftWidth: 5,
     borderLeftColor: "#4CAF50",
-    paddingVertical: 10,
-    paddingHorizontal: 15,
-    borderRadius: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 10,
     marginBottom: 16,
     flexDirection: "row",
     alignItems: "center",
@@ -144,7 +196,7 @@ export default StyleSheet.create({
     gap: 12,
   },
   logLabel: {
-    fontWeight: "600",
+    fontWeight: "700",
     color: "#333",
   },
   changeUserBtn: {
@@ -158,7 +210,7 @@ export default StyleSheet.create({
   changeUserBtnText: {
     color: "#4CAF50",
     fontSize: 14,
-    fontWeight: "500",
+    fontWeight: "600",
   },
 
   /* --- Mic animation --- */
@@ -175,18 +227,17 @@ export default StyleSheet.create({
   },
   micLabel: {
     color: "#333",
-    fontWeight: "500",
+    fontWeight: "600",
   },
 
   /* --- Toast --- */
   toast: {
     paddingVertical: 12,
     paddingHorizontal: 18,
-    borderRadius: 6,
-    fontWeight: "600",
+    borderRadius: 8,
     alignSelf: "center",
-    minWidth: 200,
-    marginVertical: 16,
+    minWidth: 220,
+    marginVertical: 18,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.15,
@@ -205,12 +256,13 @@ export default StyleSheet.create({
   },
   toastText: {
     textAlign: "center",
-    fontWeight: "600",
+    fontWeight: "700",
+    fontSize: 14,
   },
 
   /* --- Result section --- */
   resultSection: {
-    marginTop: 32,
+    marginTop: 34,
     width: "100%",
     maxWidth: 420,
   },
@@ -235,7 +287,7 @@ export default StyleSheet.create({
     borderLeftColor: "#F44336",
   },
   resultDescription: {
-    fontWeight: "bold",
+    fontWeight: "700",
     marginBottom: 8,
   },
   resultItem: {
@@ -251,15 +303,14 @@ export default StyleSheet.create({
   },
   memberBtn: {
     backgroundColor: "#4c8bf5",
-    color: "#fff",
+    borderRadius: 6,
     paddingVertical: 10,
     paddingHorizontal: 18,
-    borderRadius: 6,
     marginVertical: 4,
     alignItems: "center",
   },
   memberBtnText: {
     color: "#fff",
-    fontWeight: "500",
+    fontWeight: "700",
   },
 });
