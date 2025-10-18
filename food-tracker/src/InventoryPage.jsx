@@ -326,7 +326,6 @@ export default function InventoryPage() {
   const displayItems = selectedCategory 
     ? categories[selectedCategory] || []
     : items;
-
   const handleSelectMember = () => {
     setSelectedMember(null);
     setTranscript("");

@@ -10,7 +10,6 @@
 html, body {
   margin: 0;
   padding: 0;
-  height: 180%;
   background: var(--light);
 }
 
@@ -139,7 +138,7 @@ h2 {
   cursor: pointer;
   transition: box-shadow 0.3s ease, transform 0.2s ease;
 }
-.items-list li:hover {
+.household-page .items-list li:hover {
   box-shadow: 0 0 12px var(--primary), 0 0 24px var(--accent);
   transform: scale(1.02);
 }
