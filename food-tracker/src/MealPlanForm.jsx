@@ -3,7 +3,7 @@ import "./Popup.css";
 
 // Actions
 import CancelIcon from "./assets/Actions/Cancel.png";
-import DateIcon from "./assets/Logo/Date.png";
+import DateIcon from "./assets/Logo/date.png";
 
 export default function MealPlanForm({ onClose, onAdd }) {
   const [meal, setMeal] = useState("");
