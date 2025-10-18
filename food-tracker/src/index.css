@@ -80,5 +80,7 @@ button:focus-visible {
     margin-left: 0;
     margin-bottom: 60px;
     padding-bottom: 20px;
+    width: 100%;
+    max-width: 100%;
   }
 }

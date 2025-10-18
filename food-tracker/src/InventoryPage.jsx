@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { PieChart, Pie, Cell, Tooltip, Legend } from "recharts";
 import { useItems, useMembers, store } from "./store";
 import "./InventoryPage.css";
@@ -15,7 +15,18 @@ export default function InventoryPage() {
   const [selectedMember, setSelectedMember] = useState(null);
   const [transcript, setTranscript] = useState("");
   const [isRecording, setIsRecording] = useState(false);
-  const [toast, setToast] = useState({ message: "", type: "" }); 
+  const [toast, setToast] = useState({ message: "", type: "" });
+  const [showVoiceOverlay, setShowVoiceOverlay] = useState(false);
+  const [overlayTitle, setOverlayTitle] = useState("");
+  const [transcriptProcessed, setTransciptProcessed] = useState(false);
+
+  useEffect(() => {
+    if (selectedMember) {
+      setOverlayTitle(`Logging for: ${selectedMember.member_name}`);
+    } else {
+      setOverlayTitle("Who are you logging as?");
+    }
+  }, [selectedMember]);
 
   const showToast = (message, type = "success") => {
     setToast({ message, type });
@@ -35,10 +46,10 @@ export default function InventoryPage() {
   }));
 
   const CATEGORY_COLORS = {
-    Meats: "#FF4C4C",
-    Vegetables: "#4CAF50",
-    Dairy: "#FFEB3B",
-    Fruits: "#FF9800",
+    Meats: "#BC4749",
+    Vegetables: "#679436",
+    Dairy: "#FFDB4C",
+    Fruits: "#064789",
     Other: "#9E9E9E",
   };
 
@@ -205,6 +216,7 @@ const handleStopLogging = () => {
         const message = `${addedText}${addedText && removedText ? " and " : ""}${removedText}.`;
         showToast(`✅ ${message}`, "success");
       }
+      setTransciptProcessed(true);
 
     } catch (err) {
       console.error("Error parsing transcript to JSON:", err);
@@ -214,157 +226,255 @@ const handleStopLogging = () => {
     }
   };
 
+  const displayItems = selectedCategory 
+    ? categories[selectedCategory] || []
+    : items;
+  
+  const handleSelectMember = () => {
+    setSelectedMember(null);
+    setTranscript("");
+    setToast({ message: "", type: "" });
+    setResultJSON(null);
+    setTransciptProcessed(false);
+  };
+
+  const handleTryAgain = () => {
+    setTranscript("");
+    setToast({ message: "", type: "" });
+    setResultJSON(null);
+    setTransciptProcessed(false);
+  };
+
+  const handleRestartLogSameMember = () => {
+    setToast({ message: "", type: "" });
+    setTranscript("");
+    setIsRecording(false);
+    setResultJSON(null);
+    setTransciptProcessed(false);
+  }
+
+  const handleCloseOverlay = () => {
+    setToast({ message: "", type: "" });
+    setTranscript("");
+    setIsRecording(false);
+    setResultJSON(null);
+    setTransciptProcessed(false);
+    setSelectedMember(null);
+    setShowVoiceOverlay(false);
+  }
+
   return (
   <div className="inventory-page">
-    <h1>Fridge Inventory</h1>
+    <div className="header">
+      <h1>Fridge Inventory</h1>
+      <button onClick={() => {
+        setShowVoiceOverlay(true);
+        setShowMemberSelection(true);
+      }}>Voice Log</button>
+    </div>
 
-    {/* ✅ Toast */}
-    {toast.message && <div className={`toast ${toast.type}`}>{toast.message}</div>}
-
-    {/* ✅ Pie Chart */}
-    {data && data.length > 0 ? (
-      <PieChart width={300} height={350}>
-        <Pie
-          data={data}
-          cx={150}
-          cy={150}
-          outerRadius={100}
-          dataKey="value"
-          onClick={(entry) =>
-            setSelectedCategory(
-              selectedCategory === entry.name ? null : entry.name
-            )
-          }
-        >
-          {data.map((entry, index) => (
-            <Cell
-              key={`cell-${index}`}
-              fill={CATEGORY_COLORS[entry.name] || "#8884d8"}
+    {/* Main content */}
+    <div className="main-content">
+      <div className="pie-chart">
+        {data && data.length > 0 ? (
+          <PieChart width={300} height={350}>
+            <Pie
+              data={data}
+              cx={150}
+              cy={150}
+              outerRadius={100}
+              dataKey="value"
+              onClick={(entry) =>
+                setSelectedCategory(
+                  selectedCategory === entry.name ? null : entry.name
+                )
+              }
+            >
+              {data.map((entry, index) => (
+                <Cell
+                  key={`cell-${index}`}
+                  fill={CATEGORY_COLORS[entry.name] || "#8884d8"}
+                />
+              ))}
+            </Pie>
+            <Tooltip />
+            <Legend
+              layout="horizontal"
+              verticalAlign="bottom"
+              align="center"
+              iconType="square"
+              iconSize={15}
             />
-          ))}
-        </Pie>
-        <Tooltip />
-        <Legend
-          layout="horizontal"
-          verticalAlign="bottom"
-          align="center"
-          iconType="square"
-          iconSize={15}
-        />
-      </PieChart>
-    ) : (
-      <p>No items left in the fridge.</p>
-    )}
-
-    {/* ✅ Selected Category */}
-    {selectedCategory && categories[selectedCategory] && (
-      <div className="category-items">
-        <h2>{selectedCategory}</h2>
-        <ul>
-          {categories[selectedCategory].map((item) => (
-            <li key={item.id}>
-              {item.name} – {item.quantity} {item.unit}
-            </li>
-          ))}
-        </ul>
-      </div>
-    )}
-
-          {/* Voice logging section */}
-      <div className="voice-logging-section">
-        {!showMemberSelection ? (
-          <button onClick={() => setShowMemberSelection(true)} className="primary-btn">
-            Log
-          </button>
-        ) : !selectedMember ? (
-          <div>
-            <p>Who are you logging as?</p>
-            {householdMembers.map((m) => (
-              <button key={m.member_id} onClick={() => setSelectedMember(m)} className="member-btn">
-                {m.member_name}
-              </button>
-            ))}
-            <button onClick={() => setShowMemberSelection(false)} className="cancel-button">
-              Cancel
-            </button>
-          </div>
+          </PieChart>
         ) : (
-          <div>
-            <div className="logging-header">
-              <p>
-                <strong>Logging for:</strong> {selectedMember.member_name}
-              </p>
-              <button onClick={() => setSelectedMember(null)} className="secondary-btn">
-                Change User
-              </button>
-            </div>
-
-            {!transcript ? (
-              <div className="mic-section">
-                {!isRecording ? (
-                  <button onClick={handleStartLogging} className="primary-btn">
-                    🎤 Start Logging
-                  </button>
-                ) : (
-                  <>
-                    <div className="mic-visual">
-                      <div className="mic-dot" />
-                      <p>Listening...</p>
-                    </div>
-                    <button onClick={handleStopLogging} className="secondary-btn">
-                      ⏹ Stop Logging
-                    </button>
-                  </>
-                )}
-              </div>
-            ) : (
-              <>
-                <p>Detected: "{transcript}"</p>
-                <button onClick={handleParseTranscript} disabled={loading} className="primary-btn">
-                  {loading ? "Processing..." : "Confirm & Process"}
-                </button>
-                <button onClick={() => setTranscript("")} className="secondary-btn">
-                  Try Again
-                </button>
-              </>
-            )}
-
-            <button onClick={() => setShowMemberSelection(false)} className="cancel-button">
-              Cancel
-            </button>
-          </div>
+          <p>No items left in the fridge.</p>
         )}
       </div>
-
-      {/* JSON result display */}
-      {resultJSON && resultJSON.log && (
-        <div className="result-section">
-          <h3>Action Summary</h3>
-          {resultJSON.log.map((entry, idx) => (
-            <div key={idx} className={`result-card ${entry.status}`}>
-              <p className="result-description">{entry.description}</p>
-              {entry.data && entry.data.length > 0 ? (
-                <ul className="result-list">
-                  {entry.data.map((item, i) => (
-                    <li key={i} className="result-item">
-                      <strong>
-                        {householdMembers.find((m) => m.member_id === item.member)?.member_name || "Someone"}
-                      </strong>{" "}
-                      {item.action === "add" ? "added" : "removed"}{" "}
-                      <strong>{item.quantity} {item.unit}</strong> of{" "}
-                      <strong>{item.itemName}</strong> ({item.category})
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="result-empty">No valid items were processed.</p>
-              )}
-            </div>
+      <div className="items">
+        <div className="filter-chips">
+          <button
+            className={`filter-chip ${!selectedCategory ? "active" : ""}`}
+            onClick={() => setSelectedCategory(null)}
+          >
+            All
+          </button>
+          {Object.keys(categories).map((cat) => (
+            <button
+              key={cat}
+              className={`filter-chip ${selectedCategory === cat ? "active" : ""}`}
+              onClick={() => setSelectedCategory(cat)}
+            >
+              {cat}
+            </button>
           ))}
         </div>
+        <div className="items-list-section">
+          <div className="items-list-container">
+            {displayItems.length > 0 ? (
+              <ul className="items-list">
+                {displayItems.map((item) => (
+                  <li key={item.id} className="item-row">
+                    <span className="item-name">{item.name}</span>
+                    <span className="item-quantity">
+                      {item.quantity} {item.unit}
+                    </span>
+                    <button className="item-action-btn">⊖</button>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="no-items">No items in this category.</p>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {/* 🪄 Overlay backdrop */}
+    {showVoiceOverlay && (
+        <div
+          className="voice-overlay-backdrop"
+          onClick={handleCloseOverlay}
+        ></div>
       )}
+
+      {/* 🪄 Voice logging overlay */}
+      <div className={`voice-overlay ${showVoiceOverlay ? "open" : ""}`}>
+        <div className="voice-overlay-content">
+          <div className="x-header">
+            <button
+              className="close-overlay-btn"
+              onClick={handleCloseOverlay}
+            >
+              ✖
+            </button>
+          </div>
+          <div className="overlay-main-content">
+            <div className="voice-overlay-header">
+              <h2>{overlayTitle}</h2>
+            </div>
+            
+            {!selectedMember ? (
+              <div className="option-section">
+                <div className="regular-option">
+                  {householdMembers.map((m) => (
+                    <button key={m.member_id} onClick={() => setSelectedMember(m)} className="member-btn">
+                      {m.member_name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <div className="option-section">
+              {!transcript ? (
+                <div className="mic-section">
+                  {!isRecording ? (
+                    <div className="option-buttons">
+                      <button onClick={handleStartLogging} className="main-action-btn">
+                        Start Logging
+                      </button>
+                      <button onClick={handleSelectMember} className="regular-btn">
+                        Change Member
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="option-buttons">
+                      <button className="main-action-btn" disabled>
+                        Listening...
+                      </button>
+                      <button onClick={handleStopLogging} className="regular-btn">
+                      ⏹ Stop Logging
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="transcript-main">
+                  <div className="transcript-section">
+                    <p>Detected:</p>
+                    <div className="transcript">
+                      <p>"{transcript}"</p>
+                    </div>
+                  </div>
+                  {!transcriptProcessed ? (
+                    <div className="option-section">
+                      <button onClick={handleParseTranscript} disabled={loading} className="main-action-btn">
+                        {loading ? "Processing..." : "Confirm & Process"}
+                      </button>
+                      <button onClick={handleTryAgain} className="regular-btn">
+                        Try Again
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="option-section">
+                      <button onClick={handleRestartLogSameMember} className="main-action-btn">
+                        Add Another Log
+                      </button>
+                      <button onClick={handleSelectMember} className="regular-btn">
+                        Back to Select Member
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+            )}
+          </div>
+
+          <div className="toast-and-result">
+            {/* ✅ Toast */}
+            {toast.message && <div className={`toast ${toast.type}`}>{toast.message}</div>}
+
+            {/* JSON result display */}
+            {resultJSON && resultJSON.log && (
+              <div className="result-section">
+                <h3>Action Summary</h3>
+                {resultJSON.log.map((entry, idx) => (
+                  <div key={idx} className={`result-card ${entry.status}`}>
+                    <p className="result-description">{entry.description}</p>
+                    {entry.data && entry.data.length > 0 ? (
+                      <ul className="result-list">
+                        {entry.data.map((item, i) => (
+                          <li key={i} className="result-item">
+                            <strong>
+                              {householdMembers.find((m) => m.member_id === item.member)?.member_name || "Someone"}
+                            </strong>{" "}
+                            {item.action === "add" ? "added" : "removed"}{" "}
+                            <strong>{item.quantity} {item.unit}</strong> of{" "}
+                            <strong>{item.itemName}</strong> ({item.category})
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="result-empty">No valid items were processed.</p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
-
-
