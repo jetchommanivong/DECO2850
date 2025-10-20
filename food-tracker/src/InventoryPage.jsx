@@ -11,7 +11,6 @@ import Svg, { Path, G, Circle, Image as SvgImage, Text as SvgText } from "react-
 import * as d3Shape from "d3-shape";
 import { useNavigation } from "@react-navigation/native";
 import styles from "./InventoryPageStyles";
-import { PieChart, Pie, Cell, Tooltip, Legend } from "recharts";
 import { useItems, useMembers, store } from "./store";
 import "./InventoryPage.css";
 
@@ -44,7 +43,6 @@ export default function InventoryPage() {
   const householdMembers = useMembers();
 
   const [selectedCategory, setSelectedCategory] = useState(null);
-  // const [showMemberSelection, setShowMemberSelection] = useState(false);
   const [selectedMember, setSelectedMember] = useState(null);
   const [isRecording, setIsRecording] = useState(false);
   const [transcript, setTranscript] = useState("");
