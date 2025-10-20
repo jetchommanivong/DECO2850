@@ -6,6 +6,7 @@ import {
   ScrollView,
   Animated,
   Dimensions,
+  Modal,
 } from "react-native";
 import Svg, { Path, G, Circle, Image as SvgImage, Text as SvgText } from "react-native-svg";
 import * as d3Shape from "d3-shape";
@@ -54,6 +55,9 @@ export default function InventoryPage() {
   const [transcriptProcessed, setTranscriptProcessed] = useState(false);
   const [recognition, setRecognition] = useState(null);
 
+  // Create refs for all pie slices at the top level
+  const sliceScales = useRef([]);
+
   useEffect(() => {
     if (selectedMember) {
       setOverlayTitle(`Logging for: ${selectedMember.member_name}`);
@@ -84,6 +88,13 @@ export default function InventoryPage() {
 
   const pieData = d3Shape.pie().value((d) => d.value)(categoryData);
 
+  // Initialize scale refs for all pie slices
+  useEffect(() => {
+    sliceScales.current = pieData.map((_, i) => 
+      sliceScales.current[i] || new Animated.Value(1)
+    );
+  }, [pieData.length]);
+
   // --- Mic pulse animation ---
   const micPulse = useRef(new Animated.Value(1)).current;
   useEffect(() => {
@@ -113,13 +124,6 @@ export default function InventoryPage() {
     setToast({ message, type });
     setTimeout(() => setToast({ message: "", type: "" }), 3000);
   };
-
-
-  // Group items by category
-  const categoriesOld = items.reduce((acc, item) => {
-    acc[item.category] = (acc[item.category] || []).concat(item);
-    return acc;
-  }, {});
 
   const handleSlicePress = (sliceName, scale) => {
     Animated.sequence([
@@ -183,20 +187,6 @@ export default function InventoryPage() {
       recog.start();
       window.__activeRecog = recog;
       setRecognition(recog);
-
-      // jet's below
-      // recog.onresult = (e) => {
-      //   const t = Array.from(e.results)
-      //     .map((r) => r[0].transcript)
-      //     .join(" ")
-      //     .trim();
-      //   if (t) setTranscript(t);
-      // };
-      // recog.onend = () => setIsRecording(false);
-      // try {
-      //   recog.start();
-      //   window.__activeRecog = recog;
-      // } catch {}
     }
   };
 
@@ -213,15 +203,6 @@ export default function InventoryPage() {
     } else {
       console.warn("No active recognition instance found!");
     }
-
-    // jet's
-    // setIsRecording(false);
-    // showToast("🛑 Recording stopped.", "success");
-    // if (typeof window !== "undefined" && window.__activeRecog) {
-    //   try {
-    //     window.__activeRecog.stop();
-    //   } catch {}
-    // }
   };
   
   // --- Parse transcript ---
@@ -378,8 +359,6 @@ export default function InventoryPage() {
         </TouchableOpacity>
       </View>
 
-      {/* <Text style={styles.pageHeader}>Fridge Composition</Text> */}
-
       {/* 🥧 Pie Chart */}
       <View style={styles.chartContainer}>
         {categoryData.length ? (
@@ -391,13 +370,16 @@ export default function InventoryPage() {
                   const path = arc(slice);
                   const [cx, cy] = arc.centroid(slice);
                   const iconSize = 32;
-                  const scale = useRef(new Animated.Value(1)).current;
 
                   return (
                     <AnimatedG
                       key={index}
-                      onPress={() => handleSlicePress(slice.data.category, scale)}
-                      style={{ transform: [{ scale }] }}
+                      onPress={() => handleSlicePress(slice.data.category, index)}
+                      style={{ 
+                        transform: [{ 
+                          scale: sliceScales.current[index] || new Animated.Value(1)
+                        }] 
+                      }}
                     >
                       <Path
                         d={path}
@@ -673,62 +655,6 @@ export default function InventoryPage() {
           <Text style={styles.toastText}>{toast.message}</Text>
         </View>
       )}
-
-      {/* 🎙 Voice Logging Section */}
-      {/* <View style={{ width: "100%", maxWidth: 420, marginTop: 20, alignItems: "center" }}>
-        {!isRecording ? (
-          <TouchableOpacity
-            onPress={handleStartLogging}
-            style={[styles.button, styles.primaryBtn]}
-          >
-            <Text style={styles.primaryBtnText}>🎤 Start Logging</Text>
-          </TouchableOpacity>
-        ) : (
-          <>
-            <View style={styles.micSection}>
-              <Animated.View
-                style={[
-                  styles.micDot,
-                  { transform: [{ scale: micPulse }], marginBottom: 10 },
-                ]}
-              />
-              <Text style={styles.micLabel}>Listening...</Text>
-            </View>
-            <TouchableOpacity
-              onPress={handleStopLogging}
-              style={[styles.button, styles.secondaryBtn, { marginTop: 10 }]}
-            >
-              <Text style={styles.secondaryBtnText}>⏹ Stop Logging</Text>
-            </TouchableOpacity>
-          </>
-        )}
-      </View> */}
-
-      {/* 📦 Category Details */}
-      {/* {selectedCategory && categories[selectedCategory] && (
-        <View style={styles.categoryItems}>
-          <Text style={styles.categoryTitle}>{selectedCategory}</Text>
-          {categories[selectedCategory].map((item) => (
-            <View key={item.id} style={styles.itemRow}>
-              <Text style={styles.itemText}>{item.name}</Text>
-              <Text style={styles.itemText}>
-                {item.quantity} {item.unit}
-              </Text>
-            </View>
-          ))}
-        </View>
-      )} */}
-
-      {/* {!!toast.message && (
-        <View
-          style={[
-            styles.toast,
-            toast.type === "error" ? styles.toastError : styles.toastSuccess,
-          ]}
-        >
-          <Text style={styles.toastText}>{toast.message}</Text>
-        </View>
-      )} */}
     </ScrollView>
   );
 }
