@@ -1,6 +1,7 @@
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { useNavigation, useNavigationState } from "@react-navigation/native";
+import "./NavBar.css";
 
 export default function NavBar() {
   const navigation = useNavigation();
@@ -74,4 +75,3 @@ const styles = StyleSheet.create({
     color: "#555",
   },
 });
- 

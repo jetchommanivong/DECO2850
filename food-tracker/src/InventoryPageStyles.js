@@ -313,4 +313,372 @@ cancelButtonText: {
     color: "#fff",
     fontWeight: "700",
   },
+
+  // Add these to your existing styles object:
+
+header: {
+  flexDirection: 'row',
+  justifyContent: 'space-between',
+  alignItems: 'center',
+  width: '100%',
+  marginBottom: 20,
+},
+
+voiceLogButton: {
+  backgroundColor: '#3b82f6',
+  paddingHorizontal: 20,
+  paddingVertical: 10,
+  borderRadius: 8,
+},
+
+voiceLogButtonText: {
+  color: 'white',
+  fontWeight: '600',
+  fontSize: 16,
+},
+
+legend: {
+  flexDirection: 'row',
+  justifyContent: 'center',
+  flexWrap: 'wrap',
+  marginTop: 12,
+  gap: 14,
+},
+
+legendItem: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  marginHorizontal: 6,
+},
+
+legendDot: {
+  width: 14,
+  height: 14,
+  borderRadius: 7,
+  marginRight: 6,
+},
+
+legendText: {
+  color: '#333',
+  fontSize: 14,
+},
+
+filterChips: {
+  flexDirection: 'row',
+  flexWrap: 'wrap',
+  justifyContent: 'center',
+  marginVertical: 16,
+  gap: 8,
+},
+
+filterChip: {
+  paddingHorizontal: 16,
+  paddingVertical: 8,
+  borderRadius: 20,
+  backgroundColor: '#f0f0f0',
+  borderWidth: 1,
+  borderColor: '#ddd',
+},
+
+filterChipActive: {
+  backgroundColor: '#3b82f6',
+  borderColor: '#3b82f6',
+},
+
+filterChipText: {
+  color: '#333',
+  fontSize: 14,
+  fontWeight: '500',
+},
+
+filterChipTextActive: {
+  color: 'white',
+},
+
+itemsListSection: {
+  width: '100%',
+  maxWidth: 500,
+  marginTop: 20,
+},
+
+itemRow2: {
+  flexDirection: 'row',
+  justifyContent: 'space-between',
+  alignItems: 'center',
+  backgroundColor: 'white',
+  padding: 12,
+  marginVertical: 4,
+  borderRadius: 8,
+  shadowColor: '#000',
+  shadowOffset: { width: 0, height: 1 },
+  shadowOpacity: 0.1,
+  shadowRadius: 2,
+  elevation: 2,
+},
+
+itemName: {
+  flex: 1,
+  fontSize: 16,
+  color: '#333',
+},
+
+itemQuantity: {
+  fontSize: 14,
+  color: '#666',
+  marginRight: 10,
+},
+
+itemActionBtn: {
+  backgroundColor: '#ef4444',
+  width: 32,
+  height: 32,
+  borderRadius: 16,
+  justifyContent: 'center',
+  alignItems: 'center',
+},
+
+itemActionBtnText: {
+  color: 'white',
+  fontSize: 18,
+  fontWeight: 'bold',
+},
+
+noItems: {
+  textAlign: 'center',
+  color: '#999',
+  fontSize: 16,
+  marginTop: 20,
+},
+
+voiceOverlayBackdrop: {
+  flex: 1,
+  backgroundColor: 'rgba(0,0,0,0.5)',
+  justifyContent: 'flex-end',
+},
+
+voiceOverlay: {
+  backgroundColor: 'white',
+  borderTopLeftRadius: 20,
+  borderTopRightRadius: 20,
+  maxHeight: '90%',
+  paddingBottom: 20,
+},
+
+overlayHeader: {
+  flexDirection: 'row',
+  justifyContent: 'flex-end',
+  padding: 16,
+},
+
+closeBtn: {
+  padding: 8,
+},
+
+closeBtnText: {
+  fontSize: 20,
+  color: '#666',
+},
+
+overlayMainContent: {
+  paddingHorizontal: 20,
+},
+
+overlayTitle: {
+  fontSize: 20,
+  fontWeight: '600',
+  textAlign: 'center',
+  marginBottom: 20,
+  color: '#333',
+},
+
+memberSelection: {
+  flexDirection: 'row',
+  flexWrap: 'wrap',
+  justifyContent: 'center',
+  gap: 10,
+},
+
+memberBtn2: {
+  backgroundColor: '#4c8bf5',
+  paddingHorizontal: 20,
+  paddingVertical: 12,
+  borderRadius: 8,
+  margin: 4,
+},
+
+memberBtnText2: {
+  color: 'white',
+  fontSize: 16,
+  fontWeight: '500',
+},
+
+loggingSection: {
+  minHeight: 200,
+},
+
+actionButtons: {
+  alignItems: 'center',
+  gap: 12,
+},
+
+mainActionBtn: {
+  backgroundColor: '#3b82f6',
+  paddingHorizontal: 24,
+  paddingVertical: 14,
+  borderRadius: 8,
+  width: '100%',
+  alignItems: 'center',
+},
+
+mainActionBtnText: {
+  color: 'white',
+  fontSize: 16,
+  fontWeight: '600',
+},
+
+regularBtn: {
+  backgroundColor: 'white',
+  borderWidth: 1,
+  borderColor: '#ddd',
+  paddingHorizontal: 24,
+  paddingVertical: 14,
+  borderRadius: 8,
+  width: '100%',
+  alignItems: 'center',
+},
+
+regularBtnText: {
+  color: '#333',
+  fontSize: 16,
+  fontWeight: '500',
+},
+
+micDot2: {
+  width: 60,
+  height: 60,
+  borderRadius: 30,
+  backgroundColor: '#ef4444',
+  marginVertical: 20,
+},
+
+listeningText: {
+  fontSize: 18,
+  color: '#333',
+  fontWeight: '500',
+  marginBottom: 10,
+},
+
+transcriptMain: {
+  gap: 16,
+},
+
+transcriptSection: {
+  gap: 8,
+},
+
+detectedLabel: {
+  fontSize: 16,
+  color: '#666',
+  fontWeight: '500',
+},
+
+transcriptBox: {
+  backgroundColor: '#f9fafb',
+  borderLeftWidth: 4,
+  borderLeftColor: '#3b82f6',
+  padding: 12,
+  borderRadius: 6,
+},
+
+transcriptText: {
+  fontSize: 16,
+  color: '#333',
+  fontStyle: 'italic',
+},
+
+resultSection2: {
+  maxHeight: 300,
+  marginTop: 16,
+},
+
+resultTitle: {
+  fontSize: 18,
+  fontWeight: '600',
+  marginBottom: 12,
+  color: '#333',
+},
+
+resultCard2: {
+  backgroundColor: '#f7fdf7',
+  borderLeftWidth: 5,
+  borderLeftColor: '#ccc',
+  padding: 12,
+  borderRadius: 8,
+  marginBottom: 8,
+},
+
+resultCardSuccess2: {
+  borderLeftColor: '#4caf50',
+},
+
+resultDescription2: {
+  fontWeight: '600',
+  marginBottom: 8,
+  color: '#333',
+},
+
+resultList: {
+  gap: 4,
+},
+
+resultItem2: {
+  fontSize: 14,
+  color: '#666',
+  lineHeight: 20,
+},
+
+resultBold: {
+  fontWeight: '600',
+  color: '#333',
+},
+
+resultEmpty2: {
+  color: '#999',
+  fontStyle: 'italic',
+},
+
+toast2: {
+  position: 'absolute',
+  bottom: 20,
+  left: 20,
+  right: 20,
+  padding: 16,
+  borderRadius: 8,
+  alignItems: 'center',
+  shadowColor: '#000',
+  shadowOffset: { width: 0, height: 2 },
+  shadowOpacity: 0.25,
+  shadowRadius: 4,
+  elevation: 5,
+  zIndex: 1000,
+},
+
+toastSuccess2: {
+  backgroundColor: '#4caf50',
+},
+
+toastError2: {
+  backgroundColor: '#ef4444',
+},
+
+toastInfo: {
+  backgroundColor: '#3b82f6',
+},
+
+toastText2: {
+  color: 'white',
+  fontSize: 16,
+  fontWeight: '500',
+  textAlign: 'center',
+},
 });

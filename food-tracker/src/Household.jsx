@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useItems, useMembers, useUsageLogs, store } from "./store";
 import {
   View,
   Text,
@@ -9,6 +10,7 @@ import {
   Alert,
   Platform,
 } from "react-native";
+import InviteUserPopup from "./InviteUserPopup";
 
 // Images
 import HomeLogo from "./assets/Logo/Home.png";
@@ -21,26 +23,13 @@ import User2 from "./assets/Avatar/User 2.png";
 import User4 from "./assets/Avatar/User 4.png";
 import User5 from "./assets/Avatar/User 5.png";
 
+const AVATAR_OPTIONS = [User1, User2, User4, User5];
+
 export default function Household() {
-  const [users, setUsers] = useState([
-    { id: 1, name: "John", avatar: User1, claimed: ["Milk"], meals: [] },
-    { id: 2, name: "Mia", avatar: User2, claimed: ["Apple"], meals: [] },
-    { id: 3, name: "You", avatar: User4, claimed: ["Cheese"], meals: [] },
-    { id: 4, name: "Josh", avatar: User5, claimed: ["Broccoli"], meals: [] },
-  ]);
-
-  const [activity, setActivity] = useState([
-    "Mia claimed Apple",
-    "You claimed Milk",
-    "Josh claimed Broccoli",
-  ]);
-
-  const [items, setItems] = useState([
-    { id: 1, name: "Apple", claimedBy: ["Mia"] },
-    { id: 2, name: "Milk", claimedBy: ["John", "You"] },
-    { id: 3, name: "Cheese", claimedBy: ["You"] },
-    { id: 4, name: "Broccoli", claimedBy: ["Josh"] },
-  ]);
+  // Get data from store
+  const items = useItems();
+  const members = useMembers();
+  const usageLogs = useUsageLogs();
 
   const [mealPlans, setMealPlans] = useState([
     {
@@ -54,10 +43,95 @@ export default function Household() {
   ]);
 
   const [searchTerm, setSearchTerm] = useState("");
+  const [userAvatars, setUserAvatars] = useState({});
+  const [showInvitePopup, setShowInvitePopup] = useState(false);
+
+  useEffect(() => {
+    const newAvatars = { ...userAvatars };
+    members.forEach((member, idx) => {
+      if (!newAvatars[member.member_id]) {
+        newAvatars[member.member_id] = AVATAR_OPTIONS[idx % AVATAR_OPTIONS.length];
+      }
+    });
+    setUserAvatars(newAvatars);
+  }, [members]);
+
+  // Convert members to display format
+  const users = members.map(m => {
+    const claimed = items
+      .filter(item => item.claimedBy?.includes(m.member_name))
+      .map(item => item.name);
+
+    const userMeals = mealPlans.filter(
+      plan => plan.planner === m.member_name || plan.joined.includes(m.member_name)
+    );
+
+    return {
+      id: m.member_id,
+      name: m.member_name,
+      avatar: userAvatars[m.member_id] || User1,
+      claimed,
+      meals: userMeals,
+    };
+  });
+
+   // Build activity log from usage logs
+   const activity = usageLogs
+   .slice()
+   .reverse()
+   .slice(0, 10) // Show last 10 activities
+   .map((log) => {
+     const member = members.find(m => m.member_id === log.memberId);
+     const userName = member?.member_name || "Someone";
+     
+     if (log.action === "add") {
+       return `${userName} added ${log.quantity} of ${log.itemName}`;
+     } else if (log.action === "remove") {
+       return `${userName} removed ${log.quantity} of ${log.itemName}`;
+     }
+     return `${userName} ${log.action} ${log.itemName}`;
+   });
+
 
   const filteredItems = items.filter((item) =>
     item.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  // Get current user
+  const currentUser = members.find(m => m.member_name === "You") || members[0];
+
+  const handleToggleClaim = (item) => {
+    const currentUserName = currentUser?.member_name || "You";
+    const alreadyClaimed = item.claimedBy?.includes(currentUserName);
+
+    // Update item's claimedBy in store
+    store.actions.items.setClaimedByName(item.name, currentUserName, !alreadyClaimed);
+
+    // Log the activity
+    store.actions.logs.add({
+      memberId: currentUser?.member_id || 0,
+      action: alreadyClaimed ? "unclaimed" : "claimed",
+      itemName: item.name,
+      quantity: 1
+    });
+  };
+
+  const handleDeleteItem = (itemName) => {
+    Alert.alert(
+      "Delete Item",
+      `Are you sure you want to delete ${itemName}?`,
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: () => {
+            store.actions.items.removeByName(itemName);
+          }
+        }
+      ]
+    );
+  };
 
   return (
     <ScrollView
@@ -75,7 +149,7 @@ export default function Household() {
         {users.map((u) => (
           <TouchableOpacity
             key={u.id}
-            onPress={() => Alert.alert(u.name, `Claimed: ${u.claimed.join(", ")}`)}
+            onPress={() => Alert.alert(u.name, `Claimed: ${u.claimed.join(", ") || "Nothing yet"}`)}
             style={{ alignItems: "center", marginRight: 10 }}
           >
             <Image
@@ -86,7 +160,7 @@ export default function Household() {
           </TouchableOpacity>
         ))}
         <TouchableOpacity
-          onPress={() => Alert.alert("Invite User", "Feature not available on mobile")}
+          onPress={() => setShowInvitePopup(true)}
           style={{ alignItems: "center", marginRight: 10 }}
         >
           <Image source={InviteIcon} style={{ width: 60, height: 60 }} />
@@ -96,11 +170,15 @@ export default function Household() {
 
       {/* Activity */}
       <Text style={{ fontSize: 20, fontWeight: "bold", marginTop: 20 }}>Activity</Text>
-      {activity.map((a, i) => (
-        <Text key={i} style={{ marginVertical: 2 }}>
-          • {a}
-        </Text>
-      ))}
+      {activity.length > 0 ? (
+        activity.map((a, i) => (
+          <Text key={i} style={{ marginVertical: 2 }}>
+            • {a}
+          </Text>
+        ))
+        ) : (
+        <Text style={{ marginVertical: 2, color: "#999" }}>No activity yet</Text>
+        )}
 
       {/* Items section */}
       <Text style={{ fontSize: 20, fontWeight: "bold", marginTop: 20 }}>Items</Text>
@@ -130,43 +208,16 @@ export default function Household() {
           onPress={() =>
             Alert.alert(
               item.name,
-              `Claimed by: ${item.claimedBy.join(", ")}`,
+              `Claimed by: ${item.claimedBy?.join(", ") || "No one"}`,
               [
                 {
                   text: "Toggle Claim",
-                  onPress: () => {
-                    const alreadyClaimed = item.claimedBy.includes("You");
-                    setItems((prev) =>
-                      prev.map((i) =>
-                        i.name === item.name
-                          ? {
-                              ...i,
-                              claimedBy: alreadyClaimed
-                                ? i.claimedBy.filter((u) => u !== "You")
-                                : [...i.claimedBy, "You"],
-                            }
-                          : i
-                      )
-                    );
-                    setUsers((prev) =>
-                      prev.map((u) =>
-                        u.name === "You"
-                          ? {
-                              ...u,
-                              claimed: alreadyClaimed
-                                ? u.claimed.filter((c) => c !== item.name)
-                                : [...u.claimed, item.name],
-                            }
-                          : u
-                      )
-                    );
-                    setActivity((prev) => [
-                      alreadyClaimed
-                        ? `You unclaimed ${item.name}`
-                        : `You claimed ${item.name}`,
-                      ...prev,
-                    ]);
-                  },
+                  onPress: () => handleToggleClaim(item)
+                },
+                {
+                  text: "Delete",
+                  style: "destructive",
+                  onPress: () => handleDeleteItem(item.name)
                 },
                 { text: "Cancel", style: "cancel" },
               ]
@@ -183,12 +234,12 @@ export default function Household() {
         >
           <Text>{item.name}</Text>
           <View style={{ flexDirection: "row" }}>
-            {item.claimedBy.map((u) => {
-              const usr = users.find((x) => x.name === u);
-              return (
+            {item.claimedBy?.map((userName) => {
+              const usr = users.find((x) => x.name === userName);
+              return usr ? (
                 <Image
-                  key={u}
-                  source={usr?.avatar}
+                  key={userName}
+                  source={usr.avatar}
                   style={{
                     width: 25,
                     height: 25,
@@ -196,7 +247,7 @@ export default function Household() {
                     marginLeft: 5,
                   }}
                 />
-              );
+              ) : null;
             })}
           </View>
         </TouchableOpacity>
@@ -241,36 +292,34 @@ export default function Household() {
           <Text>Planned by: {m.planner}</Text>
 
           <View style={{ flexDirection: "row", marginTop: 5, alignItems: "center" }}>
-            {m.joined.map((u) => {
-              const usr = users.find((x) => x.name === u);
-              return (
-                <Image
-                  key={u}
-                  source={usr?.avatar}
-                  style={{
-                    width: 25,
-                    height: 25,
-                    borderRadius: 12.5,
-                    marginRight: 5,
-                  }}
-                />
-              );
+          {m.joined.map((userName) => {
+            const usr = users.find((x) => x.name === userName);
+            return usr ? (
+              <Image
+                key={userName}
+                source={usr.avatar}
+                style={{
+                  width: 25,
+                  height: 25,
+                  borderRadius: 12.5,
+                  marginRight: 5,
+                }}
+              />
+            ) : null;
             })}
             <TouchableOpacity
               onPress={() => {
-                if (!m.joined.includes("You")) {
+                const currentUserName = currentUser?.member_name || "You";
+
+                if (!m.joined.includes(currentUserName)) {
                   setMealPlans((prev) =>
                     prev.map((plan) =>
                       plan.id === m.id
-                        ? { ...plan, joined: [...plan.joined, "You"] }
+                      ? { ...plan, joined: [...plan.joined, currentUserName] }
                         : plan
                     )
                   );
-                  setActivity((prev) => [
-                    `You joined a meal plan (${m.meal})`,
-                    ...prev,
-                  ]);
-                  Alert.alert("🎉 Joined!", "You’ve been added to this meal plan.");
+                  Alert.alert("🎉 Joined!", "You've been added to this meal plan.");
                 }
               }}
               style={{
@@ -286,6 +335,24 @@ export default function Household() {
           </View>
         </View>
       ))}
+
+      {/* Invite User Popup */}
+      {showInvitePopup && (
+        <InviteUserPopup
+          onAdd={(newUser) => {
+            // Add member to store
+            store.actions.members.add(newUser.name);
+            
+            // Store avatar mapping
+            const newMemberId = store.getState().members.length;
+            setUserAvatars(prev => ({
+              ...prev,
+              [newMemberId]: newUser.avatar
+            }));
+          }}
+          onClose={() => setShowInvitePopup(false)}
+        />
+      )}
     </ScrollView>
   );
 }

@@ -1,0 +1,513 @@
+/* --- Layout & Typography --- */
+.inventory-page {
+  background: linear-gradient(135deg, #f9fafb, #eef2f3);
+  height: 100vh;
+  padding-left: 2rem;
+  padding-right: 2rem;
+  box-sizing: border-box;
+  font-family: "Poppins", Arial, sans-serif;
+  color: #333;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.inventory-page h1 {
+  font-size: 2rem;
+  font-weight: 600;
+  color: #2b2b2b;
+}
+
+.header {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  height: fit-content;
+}
+
+.header button {
+  background-color: #427AA1;
+}
+
+/* --- Household Selection --- */
+.option-buttons {
+  display: flex;
+  gap: 1rem;
+  flex-direction: column;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-bottom: 15px;
+}
+
+.regular-option {
+  display: flex;
+  gap: 1rem;
+  flex-direction: column;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-bottom: 15px;
+}
+
+.regular-option button {
+  background-color: white;
+  color: black;
+  border: 1px solid black;
+  cursor: pointer;
+  padding: 10px 18px;
+  border-radius: 8px;
+  transition: background 0.3s;
+}
+
+.regular-option button:hover {
+  background: #D1D1D1;
+}
+
+/* --- Buttons --- */
+.main-action-btn {
+  background-color: #679436;
+  color: white;
+  font-weight: bold;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.main-action-btn:disabled {
+  background-color: #B3C99A;
+  cursor: not-allowed;
+  font-style: italic;
+  font-weight: normal;
+}
+
+.primary-btn {
+  background-color: #3b82f6;
+  color: white;
+  font-weight: bold;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.primary-btn:hover {
+  background-color: #2563eb;
+}
+
+.secondary-btn {
+  background-color: #f59e0b;
+  color: white;
+  font-weight: bold;
+  border: none;
+  cursor: pointer;
+}
+
+.secondary-btn:hover {
+  background-color: #d97706;
+}
+
+.cancel-button {
+  background-color: white;
+  color: #ef4444;
+  border: 1px solid #ef4444;
+  border-radius: 6px;
+  cursor: pointer;
+  padding: 10px 18px;
+  transition: background-color 0.2s;
+  width: 100%;
+  margin-top: 10px;
+}
+
+.cancel-button:hover {
+  background-color: #ffe4e6;
+}
+
+.clear-filter-btn button {
+  background-color: #333;
+  padding: 0.5em;
+}
+
+.regular-btn {
+  background-color: white;
+  color: black;
+  border: 1px solid black;
+  cursor: pointer;
+  padding: 10px 18px;
+  border-radius: 8px;
+  transition: background 0.3s;
+}
+
+.regular-btn:hover {
+  background: #D1D1D1;
+}
+
+/* Result */
+.result-section {
+  margin-top: 1.5rem;
+  width: 100%;
+  max-width: 500px;
+  text-align: left;
+}
+
+.result-card {
+  background: #f7fdf7;
+  border-left: 5px solid #4caf50;
+  padding: 1rem;
+  border-radius: 8px;
+}
+
+.result-card.success {
+  border-color: #4caf50;
+}
+
+.result-description {
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+}
+
+.result-details {
+  font-family: monospace;
+  background: #fff;
+  padding: 0.8rem;
+  border-radius: 6px;
+  white-space: pre-wrap;
+  line-height: 1.4;
+}
+
+.member-btn {
+  background-color: #4c8bf5;
+  color: white;
+  border: none;
+  padding: 10px 18px;
+  border-radius: 6px;
+  margin: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.member-btn:hover {
+  background-color: #3b73d9;
+}
+
+.logging-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  gap: 12px;
+}
+
+.logging-header p {
+  margin: 0;
+}
+
+
+/* Overlay backdrop */
+.voice-overlay {
+  position: fixed;
+  top: 0;
+  right: -500px;
+  width: 500px;
+  height: 100%;
+  background: #fff;
+  box-shadow: -2px 0 10px rgba(0,0,0,0.2);
+  overflow-y: auto;
+  transition: right 0.3s ease;
+  z-index: 1000;
+}
+
+.voice-overlay-header {
+  display: flex;
+  align-content: center;
+  justify-content: center;
+}
+
+.voice-overlay-header h2 {
+  color: #333;
+}
+
+.voice-overlay.open {
+  right: 0;
+}
+
+.voice-overlay-content {
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+}
+
+.overlay-main-content {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.close-overlay-btn {
+  color: gray;
+  background-color: white;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+  float: right;
+}
+
+.voice-logging-section {
+  margin-top: 20px;
+}
+
+.mic-section button {
+  width: 100%;
+}
+
+.main-content {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+  height: 100%;
+  width: 100%;
+  align-items: center;
+  min-height: 0;
+  gap: 2rem;
+  align-items: stretch;
+  justify-content: center;
+}
+
+.pie-chart {
+  display: flex;
+  flex: 0;
+  justify-content: center;
+}
+
+/* Filter Chips */
+.filter-chips {
+  display: flex;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  margin-top: 1.5rem;
+}
+
+.filter-chip {
+  padding: 0.5rem 1.25rem;
+  border-radius: 20px;
+  border: none;
+  background-color: #f3f4f6;
+  color: #4b5563;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.filter-chip:hover {
+  background-color: #e5e7eb;
+}
+
+.filter-chip.active {
+  background-color: #333;
+  color: white;
+}
+
+/* --- Items List Section --- */
+.items {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+.items-list-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  padding-bottom: 5px;
+}
+
+.items-list-section h2 {
+  font-size: 1.5rem;
+  color: #333;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+.items-list-container {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  border-radius: 15px;
+  padding-left: 20px;
+  padding-right: 20px;
+  padding-top: 10px;
+  margin-bottom: 2rem;
+  margin-right: 15px;
+  height: 100%;
+  box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.items-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  overflow-y: auto;
+}
+
+.items-list > li.item-row {
+  margin: 0.5rem 0;
+  padding: 1rem;
+  background-color: transparent;
+  border-radius: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: background 0.3s;
+}
+
+.items-list li:hover {
+  background-color: #e5e7eb;
+}
+
+.item-name {
+  font-weight: 500;
+  color: #2b2b2b;
+  flex: 1;
+}
+
+.item-quantity {
+  color: #6b7280;
+  margin-right: 1rem;
+  font-weight: 500;
+}
+
+.item-action-btn {
+  padding: 0.4rem 0.8rem;
+  border: none;
+  border-radius: 6px;
+  background: #BC4749;
+  color: white;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  font-size: 1.2rem;
+}
+
+.item-action-btn:hover {
+  background-color: #D75052;
+}
+
+.no-items {
+  text-align: center;
+  color: #9ca3af;
+  padding: 2rem;
+  font-style: italic;
+}
+
+/* Scrollbar styling */
+.items-list-container::-webkit-scrollbar {
+  width: 8px;
+}
+
+.items-list-container::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 10px;
+}
+
+.items-list-container::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 10px;
+}
+
+.items-list-container::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+.option-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.transcript-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.transcript-section p {
+  margin: 0;
+}
+
+.transcript {
+  background-color: #f1f1f1;
+  border: #dedede;
+  border-radius: 15px;
+  padding: 20px;
+}
+
+.transcript p {
+  margin: 0;
+}
+
+.transcript-main {
+  display: flex;
+  flex-direction: column;
+  gap: 50px;
+}
+
+/* --- Responsive Design --- */
+@media (max-width: 768px) {
+
+  .main-content {
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .pie-chart {
+    width: 100%;
+    max-width: 400px;
+  }
+
+  .items-list-section {
+    width: 100%;
+    max-width: 100%;
+    margin-bottom: 50px;
+  }
+
+  .filter-chips {
+    justify-content: center;
+  }
+
+  .filter-chip {
+    padding: 0.2rem 0.7rem;
+    font-size: 0.8rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+  }
+
+  .header {
+    align-items: center;
+    margin-top: 10px;
+  }
+
+  .header h1{
+    font-size: larger;
+  }
+
+  .header button {
+    font-size: small;
+  }
+}
+
+.toast-and-result {
+  display: flex;
+  flex-direction: column;
+  padding-top: 50px;
+}
