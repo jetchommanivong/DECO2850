@@ -134,76 +134,93 @@ export default function InventoryPage() {
   };
 
   // --- Voice control ---
-  const handleStartLogging = () => {
-    if (typeof window === "undefined" || (!window.SpeechRecognition && !window.webkitSpeechRecognition)) {
-      showToast("Speech recognition not supported.", "error");
-      return;
-    }
+  // 🧠 Keep persistent transcript across handlers
+const transcriptRef = useRef("");
 
-    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+// 🎤 Start Logging
+const handleStartLogging = () => {
+  if (typeof window === "undefined" || (!window.SpeechRecognition && !window.webkitSpeechRecognition)) {
+    showToast("Speech recognition not supported.", "error");
+    return;
+  }
 
-    if (SR) {
-      const recog = new SR();
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const recog = new SR();
 
-      recog.continuous = false;
-      recog.interimResults = false;
-      recog.lang = "en-AU";
-      recog.maxAlternatives = 1;
+  recog.continuous = true;
+  recog.interimResults = false;
+  recog.lang = "en-AU";
+  transcriptRef.current = ""; // reset
 
-      let finalTranscript = "";
+  recog.onstart = () => {
+    setIsRecording(true);
+    showToast("🎤 Listening — tap Stop when done.", "info");
+    console.log("Listening...");
+  };
 
-      recog.onstart = () => {
-        setIsRecording(true);
-        showToast("Recording started. Please start speaking.", "info");
-        console.log("Listening...");
-      }
+  recog.onresult = (event) => {
+    const latest = Array.from(event.results)
+      .map((r) => r[0].transcript)
+      .join(" ")
+      .trim();
 
-      recog.onresult = (event) => {
-        finalTranscript = Array.from(event.results)
-          .map((r) => r[0].transcript)
-          .join(" ")
-          .trim();
-      };
+    // Accumulate transcript (preserves multiple segments)
+    transcriptRef.current = latest;
+    console.log("🗣️ Captured so far:", transcriptRef.current);
+  };
 
-      recog.onerror = (event) => {
-        console.error("Speech recognition error:", event.error);
-        showToast(`Speech recognition error: ${event.error}`, "error");
-        setIsRecording(false);
-      }
+  recog.onerror = (event) => {
+    console.error("Speech recognition error:", event.error);
+    showToast(`Speech recognition error: ${event.error}`, "error");
+    setIsRecording(false);
+  };
 
-      recog.onend = () => {
-        console.log("Recognition stopped.");
-        setIsRecording(false);
-        setRecognition(null);
-
-        if (finalTranscript.trim()) {
-          setTranscript(finalTranscript);
-          showToast("Voice captured successfully!", "success");
-        } else {
-          showToast("No speech detected. Please try again.", "error");
-        }
-      };
-
+  // Don’t auto-stop on silence — restart if needed
+  recog.onend = () => {
+    if (isRecording) {
+      console.log("Restarting listener (silence detected)");
       recog.start();
-      window.__activeRecog = recog;
-      setRecognition(recog);
     }
   };
 
-  const handleStopLogging = () => {
-    if (typeof window !== "undefined" && window.__activeRecog) {
-      try {
-        window.__activeRecog.stop();
-        showToast("Recording stopped.", "info");
-        setIsRecording(false);
-        console.log("Recording manually stopped.");
-      } catch (e) {
-        console.log("error:", e);
+  window.__activeRecog = recog;
+  setRecognition(recog);
+  recog.start();
+};
+
+// 🛑 Stop Logging — ensures last speech is saved
+const handleStopLogging = () => {
+  const recog = recognition || window.__activeRecog;
+  if (!recog) {
+    console.warn("⚠️ No active recognition instance found!");
+    return;
+  }
+
+  try {
+    recog.onend = null; // prevent restart
+    recog.stop();
+
+    // Wait a short delay for the final onresult event
+    setTimeout(() => {
+      const spoken = transcriptRef.current.trim();
+      setIsRecording(false);
+      setRecognition(null);
+
+      if (spoken) {
+        setTranscript(spoken);
+        showToast("✅ Voice captured successfully!", "success");
+        console.log("📝 Final Transcript:", spoken);
+      } else {
+        showToast("⚠️ No speech detected.", "error");
       }
-    } else {
-      console.warn("No active recognition instance found!");
-    }
-  };
+    }, 300); // small buffer ensures last event captured
+  } catch (e) {
+    console.error("Stop logging error:", e);
+  }
+};
+
+
+
   
   // --- Parse transcript ---
   const handleParseTranscript = async () => {
