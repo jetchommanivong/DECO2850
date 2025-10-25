@@ -7,13 +7,16 @@ import {
   Animated,
   Dimensions,
   Modal,
+  Platform,
 } from "react-native";
 import Svg, { Path, G, Circle, Image as SvgImage, Text as SvgText } from "react-native-svg";
 import * as d3Shape from "d3-shape";
+import { Audio } from "expo-av";
 import { useNavigation } from "@react-navigation/native";
 import styles from "./InventoryPageStyles";
 import { useItems, useMembers, store } from "./store";
 import "./InventoryPage.css";
+import VoiceRecorderHybrid from "./VoiceRecorder";
 
 const AnimatedG = Animated.createAnimatedComponent(G);
 const { width } = Dimensions.get("window");
@@ -28,7 +31,7 @@ const categoryIcons = {
   Other: require("./assets/Icons/other.png"),
 };
 
-// 🎨 Pastel, intuitive color scheme
+// 🎨 Pastel color scheme
 const CATEGORY_COLORS = {
   Meats: "#BC4749",
   Vegetables: "#679436",
@@ -39,7 +42,6 @@ const CATEGORY_COLORS = {
 
 export default function InventoryPage() {
   const navigation = useNavigation?.();
-  // Get data from store
   const items = useItems();
   const householdMembers = useMembers();
 
@@ -53,10 +55,11 @@ export default function InventoryPage() {
   const [showVoiceOverlay, setShowVoiceOverlay] = useState(false);
   const [overlayTitle, setOverlayTitle] = useState("");
   const [transcriptProcessed, setTranscriptProcessed] = useState(false);
-  const [recognition, setRecognition] = useState(null);
 
-  // Create refs for all pie slices at the top level
+  const recordingRef = useRef(null);
+  const micPulse = useRef(new Animated.Value(1)).current;
   const sliceScales = useRef([]);
+  const hybridRef = useRef(null);
 
   useEffect(() => {
     if (selectedMember) {
@@ -65,8 +68,7 @@ export default function InventoryPage() {
       setOverlayTitle("Who are you logging as?");
     }
   }, [selectedMember]);
-  
-  // --- Group inventory items by category ---
+
   const categories = useMemo(() => {
     return items.reduce((acc, item) => {
       acc[item.category] = (acc[item.category] || []).concat(item);
@@ -88,15 +90,13 @@ export default function InventoryPage() {
 
   const pieData = d3Shape.pie().value((d) => d.value)(categoryData);
 
-  // Initialize scale refs for all pie slices
   useEffect(() => {
-    sliceScales.current = pieData.map((_, i) => 
+    sliceScales.current = pieData.map((_, i) =>
       sliceScales.current[i] || new Animated.Value(1)
     );
   }, [pieData.length]);
 
   // --- Mic pulse animation ---
-  const micPulse = useRef(new Animated.Value(1)).current;
   useEffect(() => {
     if (isRecording) {
       const loop = Animated.loop(
@@ -133,96 +133,85 @@ export default function InventoryPage() {
     setSelectedCategory(selectedCategory === sliceName ? null : sliceName);
   };
 
-  // --- Voice control ---
-  // 🧠 Keep persistent transcript across handlers
-const transcriptRef = useRef("");
+  // ======================
+  // 🎤 WHISPER INTEGRATION
+  // ======================
 
-// 🎤 Start Logging
-const handleStartLogging = () => {
-  if (typeof window === "undefined" || (!window.SpeechRecognition && !window.webkitSpeechRecognition)) {
-    showToast("Speech recognition not supported.", "error");
-    return;
-  }
+  const startRecording = async () => {
+    try {
+      const { status } = await Audio.requestPermissionsAsync();
+      if (status !== "granted") {
+        showToast("Microphone permission not granted", "error");
+        return;
+      }
 
-  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  const recog = new SR();
+      await Audio.setAudioModeAsync({
+        allowsRecordingIOS: true,
+        playsInSilentModeIOS: true,
+      });
 
-  recog.continuous = true;
-  recog.interimResults = false;
-  recog.lang = "en-AU";
-  transcriptRef.current = ""; // reset
+      const rec = new Audio.Recording();
+      await rec.prepareToRecordAsync(Audio.RECORDING_OPTIONS_PRESET_HIGH_QUALITY);
+      await rec.startAsync();
 
-  recog.onstart = () => {
-    setIsRecording(true);
-    showToast("🎤 Listening — tap Stop when done.", "info");
-    console.log("Listening...");
-  };
-
-  recog.onresult = (event) => {
-    const latest = Array.from(event.results)
-      .map((r) => r[0].transcript)
-      .join(" ")
-      .trim();
-
-    // Accumulate transcript (preserves multiple segments)
-    transcriptRef.current = latest;
-    console.log("🗣️ Captured so far:", transcriptRef.current);
-  };
-
-  recog.onerror = (event) => {
-    console.error("Speech recognition error:", event.error);
-    showToast(`Speech recognition error: ${event.error}`, "error");
-    setIsRecording(false);
-  };
-
-  // Don’t auto-stop on silence — restart if needed
-  recog.onend = () => {
-    if (isRecording) {
-      console.log("Restarting listener (silence detected)");
-      recog.start();
+      recordingRef.current = rec;
+      setIsRecording(true);
+      showToast("🎙️ Recording started...", "info");
+    } catch (err) {
+      console.error("Recording start error:", err);
+      showToast("Failed to start recording.", "error");
     }
   };
 
-  window.__activeRecog = recog;
-  setRecognition(recog);
-  recog.start();
-};
-
-// 🛑 Stop Logging — ensures last speech is saved
-const handleStopLogging = () => {
-  const recog = recognition || window.__activeRecog;
-  if (!recog) {
-    console.warn("⚠️ No active recognition instance found!");
-    return;
-  }
-
-  try {
-    recog.onend = null; // prevent restart
-    recog.stop();
-
-    // Wait a short delay for the final onresult event
-    setTimeout(() => {
-      const spoken = transcriptRef.current.trim();
+  const stopRecording = async () => {
+    try {
+      const rec = recordingRef.current;
+      if (!rec) return;
+      await rec.stopAndUnloadAsync();
+      const uri = rec.getURI();
       setIsRecording(false);
-      setRecognition(null);
+      showToast("🔁 Transcribing audio...", "info");
+      await sendToWhisper(uri);
+    } catch (err) {
+      console.error("Stop recording error:", err);
+      showToast("Error stopping recording.", "error");
+    }
+  };
 
-      if (spoken) {
-        setTranscript(spoken);
+  const sendToWhisper = async (uri) => {
+    try {
+      const formData = new FormData();
+      formData.append("file", {
+        uri,
+        name: "audio.m4a",
+        type: "audio/m4a",
+      });
+      formData.append("model", "whisper-1");
+
+      const response = await fetch("https://api.openai.com/v1/audio/transcriptions", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${process.env.EXPO_PUBLIC_OPENAI_API_KEY}`,
+        },
+        body: formData,
+      });
+
+      const data = await response.json();
+      if (data.text) {
+        setTranscript(data.text);
         showToast("✅ Voice captured successfully!", "success");
-        console.log("📝 Final Transcript:", spoken);
       } else {
-        showToast("⚠️ No speech detected.", "error");
+        console.error("Whisper API error:", data);
+        showToast("❌ Failed to transcribe audio.", "error");
       }
-    }, 300); // small buffer ensures last event captured
-  } catch (e) {
-    console.error("Stop logging error:", e);
-  }
-};
+    } catch (error) {
+      console.error("Whisper upload error:", error);
+      showToast("Error uploading audio to Whisper.", "error");
+    }
+  };
 
+  // ======================
 
-
-  
-  // --- Parse transcript ---
   const handleParseTranscript = async () => {
     if (!selectedMember || !transcript) {
       showToast("Please select a member and provide a transcript", "error");
@@ -231,7 +220,7 @@ const handleStopLogging = () => {
 
     setLoading(true);
     try {
-      const res = await fetch("http://localhost:4000/api/parse-transcript", {
+      const res = await fetch("http://192.168.0.127:4000/api/parse-transcript", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -246,14 +235,11 @@ const handleStopLogging = () => {
       const json = await res.json();
       setResultJSON(json);
 
-      // Unsuccessful
       if (!json.log || json.log[0].status !== "success") {
-        console.warn("Transcript validation failed:", json);
         showToast("❌ Unable to process — item not found or invalid input.", "error");
         return;
       }
 
-      // Deduplicate similar items
       const uniqueData = Array.from(
         new Map(json.log[0].data.map(item => [`${item.itemName}-${item.action}`, item])).values()
       );
@@ -267,38 +253,28 @@ const handleStopLogging = () => {
             (i) => i.name.toLowerCase() === item.itemName.toLowerCase()
           );
           if (match) {
-            // Use store action instead
             store.actions.items.updateQuantity(match.id, item.quantity);
-            
-            // Log the action
             store.actions.logs.add({
               memberId: selectedMember.member_id,
               action: "remove",
               itemName: item.itemName,
               quantity: item.quantity
             });
-            
             removedItems.push(`${item.quantity} ${item.unit} of ${item.itemName}`);
-          } else {
-            console.warn(`⚠️ Could not find ${item.itemName} in inventory.`);
           }
         } else if (item.action === "add") {
-          // Use store action instead
           store.actions.items.addOrMerge({
             name: item.itemName,
             category: item.category || "Other",
             quantity: item.quantity,
             unit: item.unit,
           });
-          
-          // Log the action
           store.actions.logs.add({
             memberId: selectedMember.member_id,
             action: "add",
             itemName: item.itemName,
             quantity: item.quantity
           });
-          
           addedItems.push(`${item.quantity} ${item.unit} of ${item.itemName}`);
         }
       });
@@ -309,8 +285,8 @@ const handleStopLogging = () => {
         const message = `${addedText}${addedText && removedText ? " and " : ""}${removedText}.`;
         showToast(`✅ ${message}`, "success");
       }
-      setTranscriptProcessed(true);
 
+      setTranscriptProcessed(true);
     } catch (err) {
       console.error("Error parsing transcript to JSON:", err);
       showToast("Failed to connect to server.", "error");
@@ -319,9 +295,8 @@ const handleStopLogging = () => {
     }
   };
 
-  const displayItems = selectedCategory 
-    ? categories[selectedCategory] || []
-    : items;
+  const displayItems = selectedCategory ? categories[selectedCategory] || [] : items;
+
   const handleSelectMember = () => {
     setSelectedMember(null);
     setTranscript("");
@@ -392,20 +367,15 @@ const handleStopLogging = () => {
                     <AnimatedG
                       key={index}
                       onPress={() => handleSlicePress(slice.data.category, index)}
-                      style={{ 
-                        transform: [{ 
-                          scale: sliceScales.current[index] || new Animated.Value(1)
-                        }] 
+                      style={{
+                        transform: [{ scale: sliceScales.current[index] || new Animated.Value(1) }],
                       }}
                     >
                       <Path
                         d={path}
                         fill={CATEGORY_COLORS[slice.data.category] || "#BDC3C7"}
                         opacity={
-                          selectedCategory &&
-                          selectedCategory !== slice.data.category
-                            ? 0.45
-                            : 1
+                          selectedCategory && selectedCategory !== slice.data.category ? 0.45 : 1
                         }
                       />
                       <SvgImage
@@ -415,10 +385,7 @@ const handleStopLogging = () => {
                         width={iconSize}
                         height={iconSize}
                         opacity={
-                          selectedCategory &&
-                          selectedCategory !== slice.data.category
-                            ? 0.6
-                            : 1
+                          selectedCategory && selectedCategory !== slice.data.category ? 0.6 : 1
                         }
                       />
                     </AnimatedG>
@@ -469,15 +436,16 @@ const handleStopLogging = () => {
       <View style={styles.filterChips}>
         <TouchableOpacity
           onPress={() => setSelectedCategory(null)}
-          style={[
-            styles.filterChip,
-            !selectedCategory && styles.filterChipActive
-          ]}
+          style={[styles.filterChip, !selectedCategory && styles.filterChipActive]}
         >
-          <Text style={[
-            styles.filterChipText,
-            !selectedCategory && styles.filterChipTextActive
-          ]}>All</Text>
+          <Text
+            style={[
+              styles.filterChipText,
+              !selectedCategory && styles.filterChipTextActive,
+            ]}
+          >
+            All
+          </Text>
         </TouchableOpacity>
         {Object.keys(categories).map((cat) => (
           <TouchableOpacity
@@ -485,13 +453,17 @@ const handleStopLogging = () => {
             onPress={() => setSelectedCategory(cat)}
             style={[
               styles.filterChip,
-              selectedCategory === cat && styles.filterChipActive
+              selectedCategory === cat && styles.filterChipActive,
             ]}
           >
-            <Text style={[
-              styles.filterChipText,
-              selectedCategory === cat && styles.filterChipTextActive
-            ]}>{cat}</Text>
+            <Text
+              style={[
+                styles.filterChipText,
+                selectedCategory === cat && styles.filterChipTextActive,
+              ]}
+            >
+              {cat}
+            </Text>
           </TouchableOpacity>
         ))}
       </View>
@@ -551,12 +523,18 @@ const handleStopLogging = () => {
                     <View style={styles.micSection}>
                       {!isRecording ? (
                         <View style={styles.actionButtons}>
+                          {/* ▶️ Start Logging */}
                           <TouchableOpacity
-                            onPress={handleStartLogging}
+                            onPress={() => {
+                              setIsRecording(true);
+                              hybridRef.current?.start();
+                            }}
                             style={styles.mainActionBtn}
                           >
                             <Text style={styles.mainActionBtnText}>Start Logging</Text>
                           </TouchableOpacity>
+
+                          {/* 👤 Change Member */}
                           <TouchableOpacity
                             onPress={handleSelectMember}
                             style={styles.regularBtn}
@@ -566,21 +544,33 @@ const handleStopLogging = () => {
                         </View>
                       ) : (
                         <View style={styles.actionButtons}>
+                          {/* 🔴 Pulsing mic + status while recording */}
                           <Animated.View
-                            style={[
-                              styles.micDot,
-                              { transform: [{ scale: micPulse }] },
-                            ]}
+                            style={[styles.micDot, { transform: [{ scale: micPulse }] }]}
                           />
-                          <Text style={styles.listeningText}>Listening...</Text>
+                          <Text style={styles.listeningText}>Recording...</Text>
+
+                          {/* ⏹ Stop Logging */}
                           <TouchableOpacity
-                            onPress={handleStopLogging}
+                            onPress={() => {
+                              setIsRecording(false);
+                              hybridRef.current?.stop();
+                            }}
                             style={styles.regularBtn}
                           >
                             <Text style={styles.regularBtnText}>⏹ Stop Logging</Text>
                           </TouchableOpacity>
                         </View>
                       )}
+
+                      {/* 🧠 Hidden logic controller */}
+                      <VoiceRecorderHybrid
+                        ref={hybridRef}
+                        onTranscript={(text) => {
+                          console.log("🎙 Transcript:", text);
+                          setTranscript(text); // only appears after stop pressed
+                        }}
+                      />
                     </View>
                   ) : (
                     <View style={styles.transcriptMain}>
@@ -590,6 +580,7 @@ const handleStopLogging = () => {
                           <Text style={styles.transcriptText}>"{transcript}"</Text>
                         </View>
                       </View>
+
                       {!transcriptProcessed ? (
                         <View style={styles.actionButtons}>
                           <TouchableOpacity
@@ -601,6 +592,7 @@ const handleStopLogging = () => {
                               {loading ? "Processing..." : "Confirm & Process"}
                             </Text>
                           </TouchableOpacity>
+
                           <TouchableOpacity
                             onPress={handleTryAgain}
                             style={styles.regularBtn}
@@ -616,6 +608,7 @@ const handleStopLogging = () => {
                           >
                             <Text style={styles.mainActionBtnText}>Add Another Log</Text>
                           </TouchableOpacity>
+
                           <TouchableOpacity
                             onPress={handleSelectMember}
                             style={styles.regularBtn}
@@ -627,6 +620,7 @@ const handleStopLogging = () => {
                     </View>
                   )}
                 </View>
+
               )}
 
               {/* Result Display */}
@@ -634,23 +628,37 @@ const handleStopLogging = () => {
                 <ScrollView style={styles.resultSection}>
                   <Text style={styles.resultTitle}>Action Summary</Text>
                   {resultJSON.log.map((entry, idx) => (
-                    <View key={idx} style={[styles.resultCard, entry.status === "success" && styles.resultCardSuccess]}>
+                    <View
+                      key={idx}
+                      style={[
+                        styles.resultCard,
+                        entry.status === "success" && styles.resultCardSuccess,
+                      ]}
+                    >
                       <Text style={styles.resultDescription}>{entry.description}</Text>
                       {entry.data && entry.data.length > 0 ? (
                         <View style={styles.resultList}>
                           {entry.data.map((item, i) => (
                             <Text key={i} style={styles.resultItem}>
                               <Text style={styles.resultBold}>
-                                {householdMembers.find((m) => m.member_id === item.member)?.member_name || "Someone"}
-                              </Text>
-                              {" "}{item.action === "add" ? "added" : "removed"}{" "}
-                              <Text style={styles.resultBold}>{item.quantity} {item.unit}</Text> of{" "}
-                              <Text style={styles.resultBold}>{item.itemName}</Text> ({item.category})
+                                {householdMembers.find(
+                                  (m) => m.member_id === item.member
+                                )?.member_name || "Someone"}
+                              </Text>{" "}
+                              {item.action === "add" ? "added" : "removed"}{" "}
+                              <Text style={styles.resultBold}>
+                                {item.quantity} {item.unit}
+                              </Text>{" "}
+                              of{" "}
+                              <Text style={styles.resultBold}>{item.itemName}</Text> (
+                              {item.category})
                             </Text>
                           ))}
                         </View>
                       ) : (
-                        <Text style={styles.resultEmpty}>No valid items were processed.</Text>
+                        <Text style={styles.resultEmpty}>
+                          No valid items were processed.
+                        </Text>
                       )}
                     </View>
                   ))}
@@ -660,6 +668,7 @@ const handleStopLogging = () => {
           </View>
         </View>
       </Modal>
+
 
       {/* Toast */}
       {toast.message && (
