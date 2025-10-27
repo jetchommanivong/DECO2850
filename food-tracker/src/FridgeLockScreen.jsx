@@ -1,66 +1,59 @@
-import React, { useState } from "react";
+import React, { useMemo } from "react";
 import { View, Text, Image, ScrollView, TouchableOpacity } from "react-native";
+import { useItems, store } from "./store";
 
-// ✅ If your icons are local files, import them like this instead of using "/icons/..."
+// ✅ Local fallback icons (if item.icon not provided)
 import MilkIcon from "./assets/Items/Milk.png";
 import BroccoliIcon from "./assets/Items/Broccoli.png";
 import AppleIcon from "./assets/Items/Apple.png";
 
+const fallbackIcons = {
+  milk: MilkIcon,
+  broccoli: BroccoliIcon,
+  apple: AppleIcon,
+};
+
 export default function FridgeLockScreen() {
-  const [items, setItems] = useState([
-    {
-      name: "Milk",
-      expiry: "2025-09-15",
-      icon: MilkIcon,
-      quantity: "1 carton",
-      claimedBy: "Mary",
-      recipes: ["Pancakes", "Oats"],
-    },
-    {
-      name: "Broccoli",
-      expiry: "2025-09-18",
-      icon: BroccoliIcon,
-      quantity: "1 bag",
-      claimedBy: "John",
-      recipes: ["Stir-fry Beef", "Broccoli Chips"],
-    },
-    {
-      name: "Apples",
-      expiry: "2025-09-22",
-      icon: AppleIcon,
-      quantity: "6 pieces",
-    },
-  ]);
+  const items = useItems(); // 🔥 Pull from store
+  const removeItem = (id) => store.actions.items.remove(id);
 
-  const removeItem = (name) => {
-    setItems((prev) => prev.filter((item) => item.name !== name));
-  };
-
+  // 🧮 Calculate days left
   const getDaysLeft = (expiryDate) => {
+    if (!expiryDate) return null;
     const today = new Date();
     const expiry = new Date(expiryDate);
     const diffTime = expiry - today;
     return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
   };
 
+  // 🎨 Color logic based on urgency
   const getExpiryColor = (daysLeft) => {
+    if (daysLeft == null) return "#43A047"; // green (no expiry)
     if (daysLeft <= 0) return "#C62828"; // red
     if (daysLeft <= 1) return "#E65100"; // dark orange
     if (daysLeft <= 3) return "#FFB300"; // amber
     return "#43A047"; // green
   };
 
-  const groupedItems = { Today: [], "This Week": [], "Next Week": [] };
-  items.forEach((item) => {
-    const daysLeft = getDaysLeft(item.expiry);
-    if (daysLeft <= 0) groupedItems.Today.push(item);
-    else if (daysLeft <= 7) groupedItems["This Week"].push(item);
-    else if (daysLeft <= 14) groupedItems["Next Week"].push(item);
-  });
+  // 🗂️ Group items by expiry proximity
+  const groupedItems = useMemo(() => {
+    const groups = { Today: [], "This Week": [], "Next Week": [] };
+    items.forEach((item) => {
+      const daysLeft = getDaysLeft(item.expiry);
+      if (daysLeft == null) return; // skip items without expiry
+      if (daysLeft <= 0) groups.Today.push(item);
+      else if (daysLeft <= 7) groups["This Week"].push(item);
+      else if (daysLeft <= 14) groups["Next Week"].push(item);
+    });
+    return groups;
+  }, [items]);
 
-  const urgentCount = items.filter((item) => getDaysLeft(item.expiry) <= 3).length;
-  const maxItems = items.length || 1;
-  const barWidth = (urgentCount / maxItems) * 100;
+  // ⚠️ Status bar (how many items expiring soon)
+  const urgentCount = items.filter((item) => {
+    const d = getDaysLeft(item.expiry);
+    return d != null && d <= 3;
+  }).length;
+  const barWidth = (urgentCount / Math.max(items.length, 1)) * 100;
 
   return (
     <ScrollView
@@ -71,7 +64,7 @@ export default function FridgeLockScreen() {
         Expiring Items
       </Text>
 
-      {/* Status bar */}
+      {/* Status Bar */}
       <View
         style={{
           height: 18,
@@ -86,9 +79,9 @@ export default function FridgeLockScreen() {
             width: `${barWidth}%`,
             height: "100%",
             backgroundColor:
-              urgentCount / maxItems > 0.66
+              urgentCount / items.length > 0.66
                 ? "#C62828"
-                : urgentCount / maxItems > 0.33
+                : urgentCount / items.length > 0.33
                 ? "#FB8C00"
                 : "#43A047",
           }}
@@ -106,9 +99,10 @@ export default function FridgeLockScreen() {
             {groupItems.map((item) => {
               const daysLeft = getDaysLeft(item.expiry);
               const color = getExpiryColor(daysLeft);
+
               return (
                 <View
-                  key={item.name}
+                  key={item.id}
                   style={{
                     flexDirection: "row",
                     alignItems: "center",
@@ -123,7 +117,11 @@ export default function FridgeLockScreen() {
                 >
                   <View style={{ flexDirection: "row", alignItems: "center" }}>
                     <Image
-                      source={item.icon}
+                      source={
+                        item.icon ||
+                        fallbackIcons[item.name?.toLowerCase()] ||
+                        AppleIcon
+                      }
                       style={{
                         width: 40,
                         height: 40,
@@ -136,30 +134,40 @@ export default function FridgeLockScreen() {
                         {item.name}
                       </Text>
                       <Text style={{ fontSize: 14, color: "#555" }}>
-                        {item.quantity}
+                        {item.quantity} {item.unit}
                       </Text>
                       <Text
                         style={{
-                          color: color,
+                          color,
                           fontSize: 12,
                           marginTop: 2,
                         }}
                       >
-                        {daysLeft <= 0
+                        {daysLeft == null
+                          ? "No expiry"
+                          : daysLeft <= 0
                           ? "Expired"
                           : `${daysLeft} day${daysLeft > 1 ? "s" : ""} left`}
                       </Text>
                     </View>
                   </View>
 
-                  <TouchableOpacity onPress={() => removeItem(item.name)}>
-                    <Text style={{ color: "#C62828", fontWeight: "600" }}>Remove</Text>
+                  <TouchableOpacity onPress={() => removeItem(item.id)}>
+                    <Text style={{ color: "#C62828", fontWeight: "600" }}>
+                      Remove
+                    </Text>
                   </TouchableOpacity>
                 </View>
               );
             })}
           </View>
         ) : null
+      )}
+
+      {items.length === 0 && (
+        <Text style={{ color: "#777", textAlign: "center", marginTop: 40 }}>
+          No items in your fridge yet.
+        </Text>
       )}
     </ScrollView>
   );
