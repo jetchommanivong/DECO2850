@@ -138,7 +138,13 @@ function validateTranscript(parsed, selectedMemberId, inventory, membersItems, h
         });
       }
     } else if (item.action === "add") {
-      // ✅ Additions still allowed for any user
+      // Calculate expiry date if estimation provided
+      let expiryDate = null;
+      if (item.estimatedExpiryDays && typeof item.estimatedExpiryDays === "number") {
+        const expiry = new Date();
+        expiry.setDate(expiry.getDate() + item.estimatedExpiryDays);
+        expiryDate = expiry.toISOString();
+      }
       validatedItems.push({
         member: selectedMemberId,
         action: item.action,
@@ -147,6 +153,8 @@ function validateTranscript(parsed, selectedMemberId, inventory, membersItems, h
         quantity: item.quantity,
         unit: item.unit,
         category: item.category || "Other",
+        expiry: expiryDate,
+        estimatedExpiryDays: item.estimatedExpiryDays || null
       });
 }
     // if this item has errors, add them to the main errors array
@@ -178,16 +186,18 @@ app.post("/api/parse-transcript", async (req, res) => {
     const aiResponse = await generateObject({
       model: openai("gpt-4o-mini"),
       schema: z.object({
-      items: z.array(z.object({
-        action: z.enum(["add", "remove"]).describe("The action being performed"),
-        itemName: z.string().describe("The name of the item"),
-        quantity: z.number().positive().describe("The positive quantity of the item"),
-        unit: z.string().optional().describe("The unit of measurement (optional)"),
-        category: z.enum(["Dairy", "Vegetables", "Fruits", "Meats", "Other"])
-          .describe("The food category for the item")
-      }))
-    }),
-      prompt: `You are an expert at parsing food inventory transcripts. Extract ALL items mentioned with their actions, quantities, units, and categories.
+        items: z.array(z.object({
+          action: z.enum(["add", "remove"]).describe("The action being performed"),
+          itemName: z.string().describe("The name of the item"),
+          quantity: z.number().positive().describe("The positive quantity of the item"),
+          unit: z.string().optional().describe("The unit of measurement (optional)"),
+          category: z.enum(["Dairy", "Vegetables", "Fruits", "Meats", "Other"])
+            .describe("The food category for the item"),
+          estimatedExpiryDays: z.number().int().nonnegative().optional()
+            .describe("Estimated number of days until expiry from today (for 'add' actions only)")
+        }))
+      }),
+      prompt: `You are an expert at parsing food inventory transcripts and estimating food shelf life. Extract ALL items mentioned with their actions, quantities, units, categories, AND expiry estimates.
 
       TRANSCRIPT: "${transcript}"
 
@@ -207,26 +217,104 @@ app.post("/api/parse-transcript", async (req, res) => {
 
       4. UNIT EXTRACTION: Extract units like "slices", "cups", "pieces", "grams", etc. If no unit mentioned, leave empty.
 
-      5. CATEGORY CLASSIFICATION:  Always assign one of these categories for each item:
+      5. CATEGORY CLASSIFICATION: Always assign one of these categories for each item:
         - "Dairy" (milk, cheese, butter, yogurt, etc.)
         - "Vegetables" (broccoli, lettuce, onion, garlic, etc.)
         - "Fruits" (apple, tomato, banana, etc.)
         - "Meats" (chicken, beef, pork, ham, fish, etc.)
-        - "Other" (if it doesn’t fit the above)
+        - "Other" (if it doesn't fit the above)
 
-      6. MULTIPLE ITEMS: If transcript mentions multiple items (e.g., "2 eggs and 3 slices of cheese"), extract each as separate items.
+      6. EXPIRY ESTIMATION (for "add" actions ONLY):
+
+        Estimate realistic shelf life in days from TODAY based on typical refrigerated storage:
+
+
+        DAIRY:
+
+        - Fresh milk: 7 days
+
+        - Cheese (hard): 30-60 days
+
+        - Cheese (soft): 7-14 days
+
+        - Butter: 30-90 days
+
+        - Yogurt: 7-14 days
+
+        
+
+        VEGETABLES:
+
+        - Leafy greens: 5-7 days
+
+        - Root vegetables: 14-30 days
+
+        - Tomatoes: 5-7 days
+
+        - Broccoli/cauliflower: 7-10 days
+
+        - Onions/garlic: 30-60 days
+
+        
+
+        FRUITS:
+
+        - Berries: 3-5 days
+
+        - Apples: 30-60 days
+
+        - Bananas: 5-7 days (refrigerated)
+
+        - Citrus: 14-21 days
+
+        
+
+        MEATS:
+
+        - Fresh raw chicken/fish: 1-2 days
+
+        - Fresh raw beef/pork: 3-5 days
+
+        - Cooked meat: 3-4 days
+
+        - Deli meat: 3-5 days
+
+        - Bacon: 7 days
+
+        
+
+        OTHER:
+
+        - Eggs: 21-28 days
+
+        - Condiments: 60-180 days
+
+        - Leftovers: 3-4 days
+
+
+
+        For "remove" actions, DO NOT include estimatedExpiryDays (leave it null/undefined).
+
+
+
+      7. MULTIPLE ITEMS: If transcript mentions multiple items (e.g., "2 eggs and 3 slices of cheese"), extract each as separate items.
 
       EXAMPLE:
-      Input: "I used 2 eggs and half a tomato"
+      Input: "I bought 2 eggs and half a pound of ground beef"
       Output: {
         "items": [
-          {"action": "remove", "itemName": "egg", "quantity": 2, "unit": "pieces", "category": "Dairy"},
-          {"action": "remove", "itemName": "tomato", "quantity": 0.5, "unit": "pieces", "category": "Fruits"}
+          {"action": "add", "itemName": "eggs", "quantity": 2, "unit": "pieces", "category": "Other", "estimatedExpiryDays": 21},
+          {"action": "add", "itemName": "ground beef", "quantity": 0.5, "unit": "lb", "category": "Meats", "estimatedExpiryDays": 3}
         ]
       }
 
-      Be thorough and always include category for every item.`
-
+      Input: "I used 3 eggs for breakfast"
+      Output: {
+        "items": [
+          {"action": "remove", "itemName": "eggs", "quantity": 3, "unit": "pieces", "category": "Other"}
+        ]
+      }
+      Be thorough and realistic with expiry estimates. Consider refrigerated storage conditions.`
     });
 
 
