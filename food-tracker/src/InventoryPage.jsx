@@ -61,6 +61,9 @@ export default function InventoryPage() {
   const sliceScales = useRef([]);
   const hybridRef = useRef(null);
 
+  console.log("🌍 API_BASE_URL =", API_BASE_URL);
+
+
   useEffect(() => {
     if (selectedMember) {
       setOverlayTitle(`Logging for: ${selectedMember.member_name}`);
