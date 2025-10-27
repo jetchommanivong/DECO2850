@@ -7,7 +7,6 @@ import {
   Animated,
   Dimensions,
   Modal,
-  Platform,
 } from "react-native";
 import Svg, { Path, G, Circle, Image as SvgImage, Text as SvgText } from "react-native-svg";
 import * as d3Shape from "d3-shape";
