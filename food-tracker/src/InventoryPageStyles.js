@@ -681,4 +681,11 @@ toastText2: {
   fontWeight: '500',
   textAlign: 'center',
 },
+
+expiryText: {
+  fontSize: 12,
+  marginTop: 2,
+  fontWeight: "500",
+},
+
 });
