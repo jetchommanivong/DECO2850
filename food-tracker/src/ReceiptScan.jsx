@@ -1,27 +1,91 @@
 import React, { useState } from "react";
 import {
-  View,
-  Text,
+  ActivityIndicator,
+  Alert,
+  Image,
   ScrollView,
-  TouchableOpacity,
   StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
+import * as ImagePicker from 'expo-image-picker';
+import { getTextFromImage } from './services/api/GoogleVision';
+import { readAsStringAsync, EncodingType } from 'expo-file-system/legacy';
+import { promptTemplate } from './services/ai/prompt';
+import { getOpenAIResponse } from './services/ai/openai';
+import Popup from "./components/Popup";
+import ItemTable from "./components/ItemTable";
 
 export default function ReceiptScan({ onAddItem }) {
-  const receiptItems = [
-    { id: 1, name: "Ham", category: "Meats", quantity: "100g" },
-    { id: 2, name: "Tomato", category: "Fruits", quantity: "1" },
-    { id: 3, name: "Cheese", category: "Dairy", quantity: "10 Slices" },
-    { id: 4, name: "Lettuce", category: "Vegetables", quantity: "1" },
-    { id: 5, name: "Butter", category: "Dairy", quantity: "200g" },
-  ];
+  const [imageData, setImageData] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [aiResponse, setAIResponse] = useState('');
+  const [showAddItemPopup, setShowAddItemPopup] = useState(false);
 
-  const [added, setAdded] = useState([]);
+  // --- Open Camera ---
+  const openCamera = async () => {
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    if (status !== 'granted') {
+        Alert.alert('Permission Denied', 'Camera permission is required to take photos.');
+        return;
+    }
+    const result = await ImagePicker.launchCameraAsync({
+        mediaTypes: ['images'],
+        includesBase64: true,
+        quality: 1,
+    });
+    if (!result.canceled && result.assets && result.assets.length > 0) {
+        setImageData(result);
+        setAIResponse('');
+    }
+  };
 
-  const handleAdd = (item) => {
-    if (!added.includes(item.id)) {
-      onAddItem(item);
-      setAdded((prev) => [...prev, item.id]);
+  // --- Process Receipt Image ---
+  const getData = async () => {
+    if (!imageData) return;
+    setShowAddItemPopup(true);
+    setAIResponse('');
+    setLoading(true);
+
+    let base64 = imageData.assets[0].base64;
+    if (!base64) {
+        try {
+            base64 = await readAsStringAsync(imageData.assets[0].uri, { encoding: EncodingType.Base64 });
+        } catch (e) {
+            Alert.alert('No image data', 'Unable to get base64 data from image.');
+            setLoading(false);
+            return;
+        }
+    }
+  
+    try {
+      const result = await getTextFromImage(base64);
+      const text = result.responses[0]?.textAnnotations?.[0]?.description || '';
+
+      if (text && text.trim().length > 0) {
+        const aiResult = await getOpenAIResponse(`${promptTemplate}\n${text}`);
+        const aiContent = aiResult.choices[0]?.message?.content || '';
+
+        let parsedResponse = { items: [] };
+        try {
+          parsedResponse = JSON.parse(aiContent);
+          if (!Array.isArray(parsedResponse.items)) {
+              parsedResponse.items = [];
+          }
+        } catch (e) {
+          console.warn('Failed to parse AI response as JSON:', e);
+        }
+
+        setAIResponse(parsedResponse);
+      } else {
+        setAIResponse({ items: [] });
+      }
+    } catch (error) {
+      Alert.alert('Error', error.message || 'Failed to process image or get AI response.');
+      setAIResponse({ items: [] });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -32,29 +96,79 @@ export default function ReceiptScan({ onAddItem }) {
     >
       <Text style={styles.title}>Receipt Scan</Text>
       <Text style={styles.subtitle}>
-        Tap “Add” to send items to inventory.
+        Please take a photo of the receipt to be scanned.
       </Text>
 
-      {receiptItems.map((item) => (
-        <View key={item.id} style={styles.itemCard}>
-          <Text style={styles.itemText}>
-            {item.quantity} {item.name} ({item.category})
-          </Text>
+      <View style={{ flex: 1, backgroundColor: '#fff', paddingBottom: 40 }}>
+        {/* --- Image Preview --- */}
+        {imageData && (
+          <Image
+            source={{ uri: imageData.assets[0].uri }}
+            style={{
+              width: '90%',
+              height: 300,
+              alignSelf: 'center',
+              marginTop: 50,
+              borderRadius: 12,
+            }}
+          />
+        )}
 
-          <TouchableOpacity
-            onPress={() => handleAdd(item)}
-            disabled={added.includes(item.id)}
-            style={[
-              styles.addButton,
-              added.includes(item.id) && styles.addedButton,
-            ]}
-          >
-            <Text style={{ color: "white", fontWeight: "600" }}>
-              {added.includes(item.id) ? "✔ Added" : "Add"}
-            </Text>
-          </TouchableOpacity>
-        </View>
-      ))}
+        {/* --- Open Camera Button --- */}
+        <TouchableOpacity
+          style={{
+            width: '90%',
+            height: 50,
+            marginTop: 30,
+            backgroundColor: 'black',
+            justifyContent: 'center',
+            alignItems: 'center',
+            alignSelf: 'center',
+            borderRadius: 8,
+          }}
+          onPress={openCamera}
+        >
+          <Text style={{ color: 'white', fontSize: 20 }}>Take a photo</Text>
+        </TouchableOpacity>
+
+        {/* --- Get Text & AI Button --- */}
+        <TouchableOpacity
+          style={{
+            width: '90%',
+            height: 50,
+            marginTop: 30,
+            backgroundColor: imageData ? 'black' : 'gray',
+            justifyContent: 'center',
+            alignItems: 'center',
+            alignSelf: 'center',
+            borderRadius: 8,
+          }}
+          onPress={() => {
+            getData();
+          }}
+          disabled={!imageData}
+        >
+          <Text style={{ color: 'white', fontSize: 20 }}>Add Items to Inventory</Text>
+        </TouchableOpacity>
+
+        {/* --- General Popup --- */}
+        <Popup
+          visible={showAddItemPopup}
+          onClose={() => setShowAddItemPopup(false)}
+          title="Please review your items"
+          disclaimer="Results generated by AI may not be accuarate, retake photo if items are missing or incorrect."
+          variant="center"
+        >
+          {loading ? (
+            <View style={{ justifyContent: 'center', alignItems: 'center', flex: 1, paddingVertical: 20 }}>
+              <ActivityIndicator size="large" color="black" />
+              <Text style={{ marginTop: 15, fontSize: 16, color: '#555' }}>Processing...</Text>
+            </View>
+          ) : (
+            <ItemTable aiResponse={aiResponse} onClosePopup={() => setShowAddItemPopup(false)} />
+          )}
+        </Popup>
+      </View>
     </ScrollView>
   );
 }
