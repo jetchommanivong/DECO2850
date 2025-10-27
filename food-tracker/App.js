@@ -5,7 +5,6 @@ import Layout from "./src/Layout";
 
 // Screens
 import FridgeLockScreen from "./src/FridgeLockScreen";
-import RecipePage from "./src/RecipePage";
 import InventoryPage from "./src/InventoryPage";
 import ReceiptScan from "./src/ReceiptScan";
 import TempItemPhoto from "./src/TempItemPhoto";
@@ -133,14 +132,6 @@ export default function App() {
           children={() => (
             <Layout>
               <FridgeLockScreen />
-            </Layout>
-          )}
-        />
-        <Stack.Screen
-          name="RecipePage"
-          children={() => (
-            <Layout>
-              <RecipePage />
             </Layout>
           )}
         />

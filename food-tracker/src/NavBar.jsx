@@ -11,7 +11,6 @@ export default function NavBar() {
 
   const navItems = [
     { name: "Fridge", route: "FridgeLockScreen" },
-    { name: "Recipes", route: "RecipePage" },
     { name: "Inventory", route: "InventoryPage" },
     { name: "Receipt", route: "ReceiptScan" },
     { name: "ItemPhoto", route: "TempItemPhoto" },
