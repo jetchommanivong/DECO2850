@@ -264,18 +264,35 @@ export default function InventoryPage() {
             removedItems.push(`${item.quantity} ${item.unit} of ${item.itemName}`);
           }
         } else if (item.action === "add") {
-          store.actions.items.addOrMerge({
+          // Include expiry date when adding items
+          const itemData = {
             name: item.itemName,
             category: item.category || "Other",
             quantity: item.quantity,
             unit: item.unit,
-          });
+          };
+
+          // Add expiry date if provided
+          if (item.expiry) {
+            itemData.expiry = item.expiry;
+          }
+
+          store.actions.items.addOrMerge(itemData);
+
           store.actions.logs.add({
             memberId: selectedMember.member_id,
             action: "add",
             itemName: item.itemName,
             quantity: item.quantity
           });
+
+          // Format the added items message with expiry info
+          let itemMsg = `${item.quantity} ${item.unit} of ${item.itemName}`;
+
+          if (item.estimatedExpiryDays) {
+            itemMsg += ` (expires in ~${item.estimatedExpiryDays} days)`;
+          }
+
           addedItems.push(`${item.quantity} ${item.unit} of ${item.itemName}`);
         }
       });
@@ -472,17 +489,54 @@ export default function InventoryPage() {
       {/* Items List */}
       <View style={styles.itemsListSection}>
         {displayItems.length > 0 ? (
-          displayItems.map((item) => (
-            <View key={item.id} style={styles.itemRow}>
-              <Text style={styles.itemName}>{item.name}</Text>
-              <Text style={styles.itemQuantity}>
-                {item.quantity} {item.unit}
-              </Text>
-              <TouchableOpacity style={styles.itemActionBtn}>
-                <Text style={styles.itemActionBtnText}>⊖</Text>
-              </TouchableOpacity>
-            </View>
-          ))
+          displayItems
+          // Sort by expiry date - items expiring soonest first
+          .sort((a, b) => {
+            if (!a.expiry && !b.expiry) return 0;
+            if (!a.expiry) return 1;
+            if (!b.expiry) return -1;
+            return new Date(a.expiry) - new Date(b.expiry);
+          })
+          .map((item) => {
+            // Calculate days until expiry
+            let expiryInfo = null;
+            if (item.expiry) {
+              const expiryDate = new Date(item.expiry);
+              const today = new Date();
+              const daysUntilExpiry = Math.ceil((expiryDate - today) / (1000 * 60 * 60 * 24));
+
+              if (daysUntilExpiry < 0) {
+                expiryInfo = { text: "Expired", color: "#e74c3c" };
+              } else if (daysUntilExpiry === 0) {
+                expiryInfo = { text: "Expires today", color: "#e67e22" };
+              } else if (daysUntilExpiry <= 3) {
+                expiryInfo = { text: `${daysUntilExpiry}d left`, color: "#e67e22" };
+              } else if (daysUntilExpiry <= 7) {
+                expiryInfo = { text: `${daysUntilExpiry}d left`, color: "#f39c12" };
+              } else {
+                expiryInfo = { text: `${daysUntilExpiry}d left`, color: "#95a5a6" };
+              }
+            }
+            
+            return (
+              <View key={item.id} style={styles.itemRow}>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.itemName}>{item.name}</Text>
+                  {expiryInfo && (
+                    <Text style={[styles.expiryText, { color: expiryInfo.color }]}>
+                      {expiryInfo.text}
+                    </Text>
+                  )}
+                </View>
+                <Text style={styles.itemQuantity}>
+                  {item.quantity} {item.unit}
+                </Text>
+                <TouchableOpacity style={styles.itemActionBtn}>
+                  <Text style={styles.itemActionBtnText}>⊖</Text>
+                </TouchableOpacity>
+              </View>
+            )
+          })
         ) : (
           <Text style={styles.noItems}>No items in this category.</Text>
         )}
