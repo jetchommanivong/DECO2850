@@ -152,32 +152,60 @@ const actions = {
   items: {
     // Add or merge a single item or an array of items (merges by name)
     addOrMerge(data) {
-      if (Array.isArray(data)) {
-        setState((s) => {
-          let next = [...s.items];
-          data.forEach((raw) => {
-            const item = normaliseInputItem(raw);
-            const idx = next.findIndex((i) => i.name.toLowerCase() === item.name.toLowerCase());
-            if (idx >= 0) next[idx] = mergeByName(next[idx], item);
-            else next.push(item);
-          });
-          return { ...s, items: next };
-        });
-        return;
-      }
+    // 🧠 helper to add default expiry if missing
+    const addExpiry = (item) => {
+      if (item.expiry) return item; // already has expiry
 
-      const item = normaliseInputItem(data);
+      const defaultDays = {
+        milk: 7,
+        broccoli: 5,
+        chicken: 3,
+        apple: 14,
+        lettuce: 5,
+        bread: 5,
+        cheese: 10,
+        yogurt: 10,
+        meat: 3,
+        fish: 2,
+        eggs: 14,
+      };
+
+      const days = defaultDays[item.name?.toLowerCase()] || 7; // fallback
+      const expiryDate = new Date();
+      expiryDate.setDate(expiryDate.getDate() + days);
+
+      return { ...item, expiry: expiryDate.toISOString().split("T")[0] };
+    };
+
+    // ✅ If adding multiple items at once (array)
+    if (Array.isArray(data)) {
       setState((s) => {
-        const idx = s.items.findIndex((i) => i.name.toLowerCase() === item.name.toLowerCase());
-        if (idx >= 0) {
-          const merged = mergeByName(s.items[idx], item);
-          const items = [...s.items];
-          items[idx] = merged;
-          return { ...s, items };
-        }
-        return { ...s, items: [...s.items, item] };
+        let next = [...s.items];
+        data.forEach((raw) => {
+          const item = addExpiry(normaliseInputItem(raw));
+          const idx = next.findIndex((i) => i.name.toLowerCase() === item.name.toLowerCase());
+          if (idx >= 0) next[idx] = mergeByName(next[idx], item);
+          else next.push(item);
+        });
+        return { ...s, items: next };
       });
-    },
+      return;
+    }
+
+    // ✅ Single item version
+    const item = addExpiry(normaliseInputItem(data));
+    setState((s) => {
+      const idx = s.items.findIndex((i) => i.name.toLowerCase() === item.name.toLowerCase());
+      if (idx >= 0) {
+        const merged = mergeByName(s.items[idx], item);
+        const items = [...s.items];
+        items[idx] = merged;
+        return { ...s, items };
+      }
+      return { ...s, items: [...s.items, item] };
+    });
+  },
+
 
     // Subtract 'amount' from quantity, remove item if it reaches 0
     updateQuantity(id, amount) {
