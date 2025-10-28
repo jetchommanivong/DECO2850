@@ -733,5 +733,10 @@ legendText: {
   color: '#333',
   fontSize: 14,
 },
+headerButtons: {
+  display: 'flex',
+  flexDirection: 'row',
+  gap: 10,
+}
 
 });

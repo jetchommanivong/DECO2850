@@ -15,6 +15,7 @@ import { Audio } from "expo-av";
 import styles from "./InventoryPageStyles";
 import { useItems, useMembers, store } from "./store";
 import VoiceRecorderHybrid from "./VoiceRecorder";
+import ReceiptScan from "./ReceiptScan";
 
 const AnimatedG = Animated.createAnimatedComponent(G);
 const { width } = Dimensions.get("window");
@@ -53,6 +54,7 @@ export default function InventoryPage() {
   const [loading, setLoading] = useState(false);
   const [resultJSON, setResultJSON] = useState(null);
   const [showVoiceOverlay, setShowVoiceOverlay] = useState(false);
+  const [showModal, setShowModal] = useState(false);
   const [overlayTitle, setOverlayTitle] = useState("");
   const [transcriptProcessed, setTranscriptProcessed] = useState(false);
 
@@ -347,17 +349,29 @@ export default function InventoryPage() {
     setShowVoiceOverlay(false);
   };
 
+  const handleCloseModal = () => {
+    setShowModal(false);
+  }
+
   return (
     <ScrollView contentContainerStyle={styles.inventoryPage}>
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.pageHeader}>Fridge Inventory</Text>
-        <TouchableOpacity
-          onPress={() => setShowVoiceOverlay(true)}
-          style={styles.voiceLogButton}
-        >
-          <Text style={styles.voiceLogButtonText}>Voice Log</Text>
-        </TouchableOpacity>
+        <View style={styles.headerButtons}>
+          <TouchableOpacity
+            onPress={() => setShowModal(true)}
+            style={styles.voiceLogButton}
+          >
+            <Text style={styles.voiceLogButtonText}>Scan Receipt</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => setShowVoiceOverlay(true)}
+            style={styles.voiceLogButton}
+          >
+            <Text style={styles.voiceLogButtonText}>Voice Log</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* Main Content Container */}
@@ -734,6 +748,7 @@ export default function InventoryPage() {
           </View>
         </View>
       </Modal>
+      <ReceiptScan showModal={showModal} handleCloseModal={handleCloseModal}/>
 
 
       {/* Toast */}
