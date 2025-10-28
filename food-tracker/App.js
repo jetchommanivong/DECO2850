@@ -150,14 +150,6 @@ export default function App() {
           )}
         />
         <Stack.Screen
-          name="ReceiptScan"
-          children={() => (
-            <Layout>
-              <ReceiptScan onAddItem={handleAddItem} />
-            </Layout>
-          )}
-        />
-        <Stack.Screen
           name="TempItemPhoto"
           children={() => (
             <Layout>
