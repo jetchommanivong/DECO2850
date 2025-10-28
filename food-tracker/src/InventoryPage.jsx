@@ -61,9 +61,6 @@ export default function InventoryPage() {
   const sliceScales = useRef([]);
   const hybridRef = useRef(null);
 
-  console.log("🌍 API_BASE_URL =", API_BASE_URL);
-
-
   useEffect(() => {
     if (selectedMember) {
       setOverlayTitle(`Logging for: ${selectedMember.member_name}`);
@@ -223,7 +220,7 @@ export default function InventoryPage() {
 
     setLoading(true);
     try {
-      const res = await fetch(`${API_BASE_URL}/api/parse-transcript`, {
+      const res = await fetch(`${process.env.API_BASE_URL}/api/parse-transcript`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
