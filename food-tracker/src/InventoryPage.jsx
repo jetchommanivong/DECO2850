@@ -7,14 +7,13 @@ import {
   Animated,
   Dimensions,
   Modal,
+  useWindowDimensions,
 } from "react-native";
 import Svg, { Path, G, Circle, Image as SvgImage, Text as SvgText } from "react-native-svg";
 import * as d3Shape from "d3-shape";
 import { Audio } from "expo-av";
-import { useNavigation } from "@react-navigation/native";
 import styles from "./InventoryPageStyles";
 import { useItems, useMembers, store } from "./store";
-import "./InventoryPage.css";
 import VoiceRecorderHybrid from "./VoiceRecorder";
 
 const AnimatedG = Animated.createAnimatedComponent(G);
@@ -40,9 +39,11 @@ const CATEGORY_COLORS = {
 };
 
 export default function InventoryPage() {
-  const navigation = useNavigation?.();
   const items = useItems();
   const householdMembers = useMembers();
+  const windowWidth = useWindowDimensions().width;
+  const windowLength = useWindowDimensions().height;
+  const isLargeScreen = windowWidth > windowLength;
 
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [selectedMember, setSelectedMember] = useState(null);
@@ -359,177 +360,197 @@ export default function InventoryPage() {
         </TouchableOpacity>
       </View>
 
-      {/* 🥧 Pie Chart */}
-      <View style={styles.chartContainer}>
-        {categoryData.length ? (
-          <>
-            <Svg width={width} height={300}>
-              <G x={width / 2} y={150}>
-                {pieData.map((slice, index) => {
-                  const arc = d3Shape.arc().outerRadius(radius).innerRadius(50);
-                  const path = arc(slice);
-                  const [cx, cy] = arc.centroid(slice);
-                  const iconSize = 32;
-
-                  return (
-                    <AnimatedG
-                      key={index}
-                      onPress={() => handleSlicePress(slice.data.category, index)}
-                      style={{
-                        transform: [{ scale: sliceScales.current[index] || new Animated.Value(1) }],
-                      }}
-                    >
-                      <Path
-                        d={path}
-                        fill={CATEGORY_COLORS[slice.data.category] || "#BDC3C7"}
-                        opacity={
-                          selectedCategory && selectedCategory !== slice.data.category ? 0.45 : 1
-                        }
-                      />
-                      <SvgImage
-                        href={categoryIcons[slice.data.category]}
-                        x={cx - iconSize / 2}
-                        y={cy - iconSize / 2}
-                        width={iconSize}
-                        height={iconSize}
-                        opacity={
-                          selectedCategory && selectedCategory !== slice.data.category ? 0.6 : 1
-                        }
-                      />
-                    </AnimatedG>
-                  );
-                })}
-                <Circle r={52} fill="#fff" />
-                <SvgText x={-35} y={6} fontSize={16} fontWeight="600" fill="#333">
-                  {total} items
-                </SvgText>
-              </G>
-            </Svg>
-
-            {/* Legend */}
-            <View
-              style={{
-                flexDirection: "row",
-                justifyContent: "center",
-                flexWrap: "wrap",
-                marginTop: 12,
-                gap: 14,
-              }}
-            >
-              {Object.entries(CATEGORY_COLORS).map(([cat, color]) => (
+      {/* Main Content Container */}
+      <View style={[
+        styles.mainContentContainer,
+        !isLargeScreen && { flexDirection: 'column', gap: 20, minHeight: 'fit-content' }
+      ]}>
+        {/* LEFT COLUMN */}
+        <View style={[
+          styles.leftColumn,
+          !isLargeScreen && { maxWidth: '100%', width: '100%', minHeight: 'fit-content', alignItems: "center" }
+        ]}>
+          {/* 🥧 Pie Chart */}
+          <View style={styles.chartContainer}>
+            {categoryData.length ? (
+              <>
+                <Svg width={width} height={300}>
+                  <G x={width / 2} y={150}>
+                    {pieData.map((slice, index) => {
+                      const arc = d3Shape.arc().outerRadius(radius).innerRadius(50);
+                      const path = arc(slice);
+                      const [cx, cy] = arc.centroid(slice);
+                      const iconSize = 32;
+                    
+                      return (
+                        <AnimatedG
+                          key={index}
+                          onPress={() => handleSlicePress(slice.data.category, index)}
+                          style={{
+                            transform: [{ scale: sliceScales.current[index] || new Animated.Value(1) }],
+                          }}
+                        >
+                          <Path
+                            d={path}
+                            fill={CATEGORY_COLORS[slice.data.category] || "#BDC3C7"}
+                            opacity={
+                              selectedCategory && selectedCategory !== slice.data.category ? 0.45 : 1
+                            }
+                          />
+                          <SvgImage
+                            href={categoryIcons[slice.data.category]}
+                            x={cx - iconSize / 2}
+                            y={cy - iconSize / 2}
+                            width={iconSize}
+                            height={iconSize}
+                            opacity={
+                              selectedCategory && selectedCategory !== slice.data.category ? 0.6 : 1
+                            }
+                          />
+                        </AnimatedG>
+                      );
+                    })}
+                    <Circle r={52} fill="#fff" />
+                    <SvgText x={-35} y={6} fontSize={16} fontWeight="600" fill="#333">
+                      {total} items
+                    </SvgText>
+                  </G>
+                </Svg>
+                  
+                {/* Legend */}
                 <View
-                  key={cat}
-                  style={{ flexDirection: "row", alignItems: "center", marginHorizontal: 6 }}
+                  style={{
+                    flexDirection: "row",
+                    justifyContent: "center",
+                    flexWrap: "wrap",
+                    marginTop: 12,
+                    gap: 14,
+                  }}
                 >
-                  <View
-                    style={{
-                      width: 14,
-                      height: 14,
-                      borderRadius: 7,
-                      backgroundColor: color,
-                      marginRight: 6,
-                    }}
-                  />
-                  <Text style={{ color: "#333", fontSize: 14 }}>{cat}</Text>
+                  {Object.entries(CATEGORY_COLORS).map(([cat, color]) => (
+                    <View
+                      key={cat}
+                      style={{ flexDirection: "row", alignItems: "center", marginHorizontal: 6 }}
+                    >
+                      <View
+                        style={{
+                          width: 14,
+                          height: 14,
+                          borderRadius: 7,
+                          backgroundColor: color,
+                          marginRight: 6,
+                        }}
+                      />
+                      <Text style={{ color: "#333", fontSize: 14 }}>{cat}</Text>
+                    </View>
+                  ))}
                 </View>
-              ))}
-            </View>
-          </>
-        ) : (
-          <Text style={styles.itemText}>No items in your fridge.</Text>
-        )}
-      </View>
+              </>
+            ) : (
+              <Text style={styles.itemText}>No items in your fridge.</Text>
+            )}
+          </View>
+        </View>
 
-      {/* Filter Chips */}
-      <View style={styles.filterChips}>
-        <TouchableOpacity
-          onPress={() => setSelectedCategory(null)}
-          style={[styles.filterChip, !selectedCategory && styles.filterChipActive]}
-        >
-          <Text
-            style={[
-              styles.filterChipText,
-              !selectedCategory && styles.filterChipTextActive,
-            ]}
-          >
-            All
-          </Text>
-        </TouchableOpacity>
-        {Object.keys(categories).map((cat) => (
-          <TouchableOpacity
-            key={cat}
-            onPress={() => setSelectedCategory(cat)}
-            style={[
-              styles.filterChip,
-              selectedCategory === cat && styles.filterChipActive,
-            ]}
-          >
-            <Text
-              style={[
-                styles.filterChipText,
-                selectedCategory === cat && styles.filterChipTextActive,
-              ]}
+        {/* RIGHT COLUMN */}
+        <View style={[
+          styles.rightColumn,
+          !isLargeScreen && { maxWidth: '100%', width: '100%' }
+        ]}>
+          {/* Filter Chips */}
+          <View style={[
+            styles.filterChips,
+            !isLargeScreen && { justifyContent: 'center'}]}>
+            <TouchableOpacity
+              onPress={() => setSelectedCategory(null)}
+              style={[styles.filterChip, !selectedCategory && styles.filterChipActive]}
             >
-              {cat}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </View>
-
-      {/* Items List */}
-      <View style={styles.itemsListSection}>
-        {displayItems.length > 0 ? (
-          displayItems
-          // Sort by expiry date - items expiring soonest first
-          .sort((a, b) => {
-            if (!a.expiry && !b.expiry) return 0;
-            if (!a.expiry) return 1;
-            if (!b.expiry) return -1;
-            return new Date(a.expiry) - new Date(b.expiry);
-          })
-          .map((item) => {
-            // Calculate days until expiry
-            let expiryInfo = null;
-            if (item.expiry) {
-              const expiryDate = new Date(item.expiry);
-              const today = new Date();
-              const daysUntilExpiry = Math.ceil((expiryDate - today) / (1000 * 60 * 60 * 24));
-
-              if (daysUntilExpiry < 0) {
-                expiryInfo = { text: "Expired", color: "#e74c3c" };
-              } else if (daysUntilExpiry === 0) {
-                expiryInfo = { text: "Expires today", color: "#e67e22" };
-              } else if (daysUntilExpiry <= 3) {
-                expiryInfo = { text: `${daysUntilExpiry}d left`, color: "#e67e22" };
-              } else if (daysUntilExpiry <= 7) {
-                expiryInfo = { text: `${daysUntilExpiry}d left`, color: "#f39c12" };
-              } else {
-                expiryInfo = { text: `${daysUntilExpiry}d left`, color: "#95a5a6" };
-              }
-            }
-            
-            return (
-              <View key={item.id} style={styles.itemRow}>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.itemName}>{item.name}</Text>
-                  {expiryInfo && (
-                    <Text style={[styles.expiryText, { color: expiryInfo.color }]}>
-                      {expiryInfo.text}
-                    </Text>
-                  )}
-                </View>
-                <Text style={styles.itemQuantity}>
-                  {item.quantity} {item.unit}
+              <Text
+                style={[
+                  styles.filterChipText,
+                  !selectedCategory && styles.filterChipTextActive,
+                ]}
+              >
+                All
+              </Text>
+            </TouchableOpacity>
+            {Object.keys(categories).map((cat) => (
+              <TouchableOpacity
+                key={cat}
+                onPress={() => setSelectedCategory(cat)}
+                style={[
+                  styles.filterChip,
+                  selectedCategory === cat && styles.filterChipActive,
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.filterChipText,
+                    selectedCategory === cat && styles.filterChipTextActive,
+                  ]}
+                >
+                  {cat}
                 </Text>
-                <TouchableOpacity style={styles.itemActionBtn}>
-                  <Text style={styles.itemActionBtnText}>⊖</Text>
-                </TouchableOpacity>
-              </View>
-            )
-          })
-        ) : (
-          <Text style={styles.noItems}>No items in this category.</Text>
-        )}
+              </TouchableOpacity>
+            ))}
+          </View>
+
+          {/* Items List */}
+          <View style={styles.itemsListSection}>
+            {displayItems.length > 0 ? (
+              displayItems
+              // Sort by expiry date - items expiring soonest first
+              .sort((a, b) => {
+                if (!a.expiry && !b.expiry) return 0;
+                if (!a.expiry) return 1;
+                if (!b.expiry) return -1;
+                return new Date(a.expiry) - new Date(b.expiry);
+              })
+              .map((item) => {
+                // Calculate days until expiry
+                let expiryInfo = null;
+                if (item.expiry) {
+                  const expiryDate = new Date(item.expiry);
+                  const today = new Date();
+                  const daysUntilExpiry = Math.ceil((expiryDate - today) / (1000 * 60 * 60 * 24));
+                
+                  if (daysUntilExpiry < 0) {
+                    expiryInfo = { text: "Expired", color: "#e74c3c" };
+                  } else if (daysUntilExpiry === 0) {
+                    expiryInfo = { text: "Expires today", color: "#e67e22" };
+                  } else if (daysUntilExpiry <= 3) {
+                    expiryInfo = { text: `${daysUntilExpiry}d left`, color: "#e67e22" };
+                  } else if (daysUntilExpiry <= 7) {
+                    expiryInfo = { text: `${daysUntilExpiry}d left`, color: "#f39c12" };
+                  } else {
+                    expiryInfo = { text: `${daysUntilExpiry}d left`, color: "#95a5a6" };
+                  }
+                }
+                
+                return (
+                  <View key={item.id} style={styles.itemRow}>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.itemName}>{item.name}</Text>
+                      {expiryInfo && (
+                        <Text style={[styles.expiryText, { color: expiryInfo.color }]}>
+                          {expiryInfo.text}
+                        </Text>
+                      )}
+                    </View>
+                    <Text style={styles.itemQuantity}>
+                      {item.quantity} {item.unit}
+                    </Text>
+                    <TouchableOpacity style={styles.itemActionBtn}>
+                      <Text style={styles.itemActionBtnText}>⊖</Text>
+                    </TouchableOpacity>
+                  </View>
+                )
+              })
+            ) : (
+              <Text style={styles.noItems}>No items in this category.</Text>
+            )}
+          </View>
+        </View>        
       </View>
 
       {/* Voice Overlay Modal */}
