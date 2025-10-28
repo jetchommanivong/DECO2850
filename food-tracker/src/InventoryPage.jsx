@@ -16,7 +16,6 @@ import styles from "./InventoryPageStyles";
 import { useItems, useMembers, store } from "./store";
 import "./InventoryPage.css";
 import VoiceRecorderHybrid from "./VoiceRecorder";
-import { API_BASE_URL } from "@env";
 
 const AnimatedG = Animated.createAnimatedComponent(G);
 const { width } = Dimensions.get("window");
@@ -60,9 +59,6 @@ export default function InventoryPage() {
   const micPulse = useRef(new Animated.Value(1)).current;
   const sliceScales = useRef([]);
   const hybridRef = useRef(null);
-
-  console.log("🌍 API_BASE_URL =", API_BASE_URL);
-
 
   useEffect(() => {
     if (selectedMember) {
@@ -223,7 +219,7 @@ export default function InventoryPage() {
 
     setLoading(true);
     try {
-      const res = await fetch(`${API_BASE_URL}/api/parse-transcript`, {
+      const res = await fetch(`${process.env.API_BASE_URL}/api/parse-transcript`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -352,14 +348,6 @@ export default function InventoryPage() {
 
   return (
     <ScrollView contentContainerStyle={styles.inventoryPage}>
-      {navigation && (
-        <View style={{ alignSelf: "flex-start", marginBottom: 8 }}>
-          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.cancelButton}>
-            <Text style={styles.cancelButtonText}>← Back</Text>
-          </TouchableOpacity>
-        </View>
-      )}
-
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.pageHeader}>Fridge Inventory</Text>
