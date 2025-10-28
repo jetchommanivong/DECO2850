@@ -10,6 +10,7 @@ export default StyleSheet.create({
     alignItems: "center",
     backgroundColor: "#fdfdfd",
     width: "100%",
+    height: "100vh",
   },
 
   pageHeader: {

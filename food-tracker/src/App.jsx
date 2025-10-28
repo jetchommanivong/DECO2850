@@ -118,7 +118,6 @@ const handleTranscript = async (text) => {
               />
             }
           />
-          <Route path="/receipt" element={<ReceiptScan onAddItem={handleAddItem} />} />
           <Route
             path="/tempitemphoto"
             element={

@@ -3,7 +3,6 @@ import {
   ActivityIndicator,
   Alert,
   Image,
-  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -16,7 +15,7 @@ import { promptTemplate } from './services/ai/prompt';
 import { getOpenAIResponse } from './services/ai/openai';
 import Popup from "./components/Popup";
 import ItemTable from "./components/ItemTable";
-import { Modal } from "react-native-web";
+import { Modal } from "react-native";
 
 export default function ReceiptScan({showModal, handleCloseModal}) {
   const [imageData, setImageData] = useState(null);
@@ -171,7 +170,10 @@ export default function ReceiptScan({showModal, handleCloseModal}) {
                   <Text style={{ marginTop: 15, fontSize: 16, color: '#555' }}>Processing...</Text>
                 </View>
               ) : (
-                <ItemTable aiResponse={aiResponse} onClosePopup={() => setShowAddItemPopup(false)} />
+                <ItemTable aiResponse={aiResponse} onClosePopup={() => {
+                  setShowAddItemPopup(false);
+                  handleCloseModal();
+                }} />
               )}
             </Popup>
           </View>
@@ -209,13 +211,14 @@ const styles = StyleSheet.create({
   voiceOverlayBackdrop: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'flex-end',
+    // justifyContent: 'flex-end',
   },
   voiceOverlay: {
     backgroundColor: 'white',
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
-    maxHeight: '90%',
+    // maxHeight: '90%',
+    height: '100%',
     paddingBottom: 20,
   },
   overlayHeader: {
