@@ -2,7 +2,6 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { useState } from "react";
 
 import FridgeLockScreen from "./FridgeLockScreen";
-import RecipePage from "./RecipePage";
 import InventoryPage from "./InventoryPage";
 import ReceiptScan from "./ReceiptScan";
 import TempItemPhoto from "./TempItemPhoto";
@@ -108,7 +107,6 @@ const handleTranscript = async (text) => {
       <div className="app-container">
         <Routes>
           <Route path="/" element={<FridgeLockScreen />} />
-          <Route path="/recipes" element={<RecipePage />} />
           <Route
             path="/inventory"
             element={
