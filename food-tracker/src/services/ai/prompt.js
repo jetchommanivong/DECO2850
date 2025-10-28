@@ -17,11 +17,43 @@ Always use the most precise and realistic unit of measurement for the item (e.g.
 
 For the expiry date, ensure it is formatted as "YYYY-MM-DD". 
 If the expiry date is not explicitly mentioned, infer a reasonable default starting from the date specified in the text based on common shelf lives:
-- 7 days for fresh produce (fruits, vegetables)
-- 5 days for bread or baked goods
-- 180 days for canned, bottled, or boxed goods
-- 10 days for refrigerated dairy and protein products
-- 365 days for frozen or long-lasting pantry items
+
+DAIRY:
+  - Fresh milk: 7 days
+  - Cheese (hard): 30-60 days
+  - Cheese (soft): 7-14 days
+  - Butter: 30-90 days
+  - Yogurt: 7-14 days
+
+VEGETABLES:
+  - Leafy greens: 5-7 days
+  - Root vegetables: 14-30 days
+  - Tomatoes: 5-7 days
+  - Broccoli/cauliflower: 7-10 days
+  - Onions/garlic: 30-60 days
+
+FRUITS:
+  - Berries: 3-5 days
+  - Apples: 30-60 days
+  - Bananas: 5-7 days (refrigerated)
+  - Citrus: 14-21 days
+
+MEATS:
+  - Fresh raw chicken/fish: 1-2 days
+  - Fresh raw beef/pork: 3-5 days
+  - Cooked meat: 3-4 days
+  - Deli meat: 3-5 days
+  - Bacon: 7 days
+
+OTHER:
+  - Eggs: 21-28 days
+  - Condiments: 60-180 days
+  - Leftovers: 3-4 days
+  - Bread/baked goods: 5 days
+  - Canned/bottled/boxed goods: 180 days
+  - Refriegrated dairy and protein products
+  - Frozen/long-lasting pantry items: 365 days
+
 If no reasonable inference can be made or date cannot be found, set the expiry date to null.
 
 Present the cleaned and structured data in a valid ***JSON*** format that follows this structure:
