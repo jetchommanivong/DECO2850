@@ -19,12 +19,14 @@ export default function FridgeLockScreen() {
 
   // 🧮 Calculate days left
   const getDaysLeft = (expiryDate) => {
-    if (!expiryDate) return null;
-    const today = new Date();
+    if (!expiryDate) return null; // No expiry info
     const expiry = new Date(expiryDate);
+    if (isNaN(expiry)) return null;
+    const today = new Date();
     const diffTime = expiry - today;
     return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
   };
+
 
   // 🎨 Color logic based on urgency
   const getExpiryColor = (daysLeft) => {
