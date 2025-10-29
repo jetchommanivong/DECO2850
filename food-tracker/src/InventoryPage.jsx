@@ -455,7 +455,7 @@ export default function InventoryPage() {
                 </View>
               </>
             ) : (
-              <Text style={styles.itemText}>No items in your fridge.</Text>
+              <Text style={styles.itemText}>No items in your fridge</Text>
             )}
           </View>
 
@@ -482,42 +482,44 @@ export default function InventoryPage() {
           !isLargeScreen && { maxWidth: '100%', width: '100%' }
         ]}>
           {/* Filter Chips */}
-          <View style={[
-            styles.filterChips,
-            !isLargeScreen && { justifyContent: 'center'}]}>
-            <TouchableOpacity
-              onPress={() => setSelectedCategory(null)}
-              style={[styles.filterChip, !selectedCategory && styles.filterChipActive]}
-            >
-              <Text
-                style={[
-                  styles.filterChipText,
-                  !selectedCategory && styles.filterChipTextActive,
-                ]}
-              >
-                All
-              </Text>
-            </TouchableOpacity>
-            {Object.keys(categories).map((cat) => (
+          { displayItems.length > 0 ? (
+            <View style={[
+              styles.filterChips,
+              !isLargeScreen && { justifyContent: 'center'}]}>
               <TouchableOpacity
-                key={cat}
-                onPress={() => setSelectedCategory(cat)}
-                style={[
-                  styles.filterChip,
-                  selectedCategory === cat && styles.filterChipActive,
-                ]}
+                onPress={() => setSelectedCategory(null)}
+                style={[styles.filterChip, !selectedCategory && styles.filterChipActive]}
               >
                 <Text
                   style={[
                     styles.filterChipText,
-                    selectedCategory === cat && styles.filterChipTextActive,
+                    !selectedCategory && styles.filterChipTextActive,
                   ]}
                 >
-                  {cat}
+                  All
                 </Text>
               </TouchableOpacity>
-            ))}
-          </View>
+              {Object.keys(categories).map((cat) => (
+                <TouchableOpacity
+                  key={cat}
+                  onPress={() => setSelectedCategory(cat)}
+                  style={[
+                    styles.filterChip,
+                    selectedCategory === cat && styles.filterChipActive,
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.filterChipText,
+                      selectedCategory === cat && styles.filterChipTextActive,
+                    ]}
+                  >
+                    {cat}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          ) : null }
 
           {/* Items List */}
           <View style={styles.itemsListSection}>
@@ -646,7 +648,7 @@ export default function InventoryPage() {
                 )
               })
             ) : (
-              <Text style={styles.noItems}>No items in this category.</Text>
+              <Text style={styles.noItems}>No items</Text>
             )}
           </View>
         </View>        
