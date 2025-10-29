@@ -211,14 +211,14 @@ const styles = StyleSheet.create({
   voiceOverlayBackdrop: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.5)',
-    // justifyContent: 'flex-end',
+    justifyContent: 'flex-end',
   },
   voiceOverlay: {
     backgroundColor: 'white',
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
-    // maxHeight: '90%',
-    height: '100%',
+    maxHeight: '90%',
+    minHeight: '75%',
     paddingBottom: 20,
   },
   overlayHeader: {

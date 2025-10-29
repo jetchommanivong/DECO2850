@@ -461,6 +461,7 @@ voiceOverlay: {
   borderTopLeftRadius: 20,
   borderTopRightRadius: 20,
   maxHeight: '90%',
+  minHeight: '75%',
   paddingBottom: 20,
 },
 
