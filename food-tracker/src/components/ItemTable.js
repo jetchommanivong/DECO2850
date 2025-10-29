@@ -8,7 +8,18 @@ const ItemTable = ({ aiResponse, onClosePopup }) => {
   const [selectedMember, setSelectedMember] = useState('None');
   const { width } = useWindowDimensions();
   const isSmallScreen = width < 400;
-  const members = useMembers();
+ 
+  // use members from store (default 'None' will remain when popup loads)
+  const membersFromStore = useMembers();
+
+  // normalize members into objects with id + name so keys and comparisons are stable
+  const members = [
+    { id: 'none', name: 'None' },
+    ...membersFromStore.map((m, idx) => ({
+      id: m.member_id ?? m.id ?? `member-${idx}`,
+      name: m.member_name ?? m.name ?? `Member ${idx + 1}`,
+    })),
+  ];
 
   const holdTimeout = useRef(null);
   const holdInterval = useRef(null);
@@ -56,28 +67,25 @@ const ItemTable = ({ aiResponse, onClosePopup }) => {
   };
 
   const handleConfirm = () => {
-    if (!items || items.length === 0) return;
+    // Attach claimedBy based on selected member (omit when 'None')
+    const claimedBy = selectedMember === 'None' ? undefined : selectedMember;
 
-    try {
-      store.actions.items.addOrMerge(
-        items.map((item) => ({
-          id: item.item_id,
-          name: item.name,
-          category: item.category || 'Other',
-          quantity: item.quantity,
-          unit: item.unit || 'pcs',
-          expiry: item.expiry,
-        }))
-      );
-    } catch (err) {
-      console.error('Error adding items to store:', err);
-    }
+    // Map current items to store-friendly shape; store will normalise input
+    const payload = items.map((it) => ({
+      id: it.item_id ?? it.id,
+      name: it.name,
+      quantity: it.quantity,
+      unit: it.unit,
+      category: it.category ?? 'Other',
+      expiry: it.expiry,
+      claimedBy: claimedBy,
+    }));
 
-    Alert.alert('✅ Success!', 'Items have been added to your inventory!');
+    // Add or merge items into the central store
+    store.actions.items.addOrMerge(payload);
 
-    if (onClosePopup) {
-      onClosePopup(); // ✅ properly closes the modal
-    }
+    // Close popup if callback provided
+    onClosePopup && onClosePopup();
   };
 
   const renderItem = ({ item }) => (
@@ -180,15 +188,15 @@ const ItemTable = ({ aiResponse, onClosePopup }) => {
         >
           {members.map((member) => (
             <TouchableOpacity
-              key={member.member_id}
+              key={member.id}
               activeOpacity={0.8}
-              onPress={() => setSelectedMember(member.member_name)}
+              onPress={() => setSelectedMember(member.name)}
               style={[
                 styles.categoryPill,
-                selectedMember === member.member_name && styles.selectedPill,
+                selectedMember === member.name && styles.selectedPill,
               ]}
             >
-              <Text style={styles.categoryText}>{member.member_name}</Text>
+              <Text style={styles.categoryText}>{member.name}</Text>
             </TouchableOpacity>
           ))}
         </View>
@@ -197,7 +205,7 @@ const ItemTable = ({ aiResponse, onClosePopup }) => {
       <FlatList
         data={items}
         renderItem={renderItem}
-        keyExtractor={(item) => item.item_id.toString()}
+        keyExtractor={(item) => ((item.item_id ?? item.id ?? item.name) + '').toString()}
         contentContainerStyle={styles.listContainer}
         scrollEnabled={false}
       />
