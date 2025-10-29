@@ -79,7 +79,9 @@ export default function InventoryPage() {
 
   const categories = useMemo(() => {
     return items.reduce((acc, item) => {
-      acc[item.category] = (acc[item.category] || []).concat(item);
+      // Normalize category name: capitalize first letter
+      const normalizedCategory = item.category.charAt(0).toUpperCase() + item.category.slice(1);
+      acc[normalizedCategory] = (acc[normalizedCategory] || []).concat(item);
       return acc;
     }, {});
   }, [items]);
