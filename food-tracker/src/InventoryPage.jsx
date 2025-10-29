@@ -26,21 +26,26 @@ const radius = 110;
 
 // 🖼️ Category icons
 const categoryIcons = {
-  Meats: require("./assets/Icons/meat.png"),
+  Protein: require("./assets/Icons/meat.png"),
   Vegetables: require("./assets/Icons/broccoli.png"),
   Dairy: require("./assets/Icons/cheese.png"),
   Fruits: require("./assets/Icons/apple.png"),
+  Grains: require("./assets/Icons/grains.png"),
+  Sugars: require("./assets/Icons/sweets.png"),
   Other: require("./assets/Icons/other.png"),
 };
 
 // 🎨 Pastel color scheme
 const CATEGORY_COLORS = {
-  Meats: "#BC4749",
+  Protein: "#BC4749",
   Vegetables: "#679436",
   Dairy: "#FFDB4C",
   Fruits: "#064789",
+  Grains: "#F2A94A",
+  Sugars: "#F185C1",
   Other: "#BDC3C7",
 };
+
 
 export default function InventoryPage() {
   const items = useItems();

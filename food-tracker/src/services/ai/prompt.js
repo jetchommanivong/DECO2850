@@ -8,7 +8,6 @@ Use the following examples as a guide:
 - **grains** → rice, bread, pasta, oats, flour, cereal, noodles
 - **protein** → chicken, beef, pork, fish, eggs, tofu, beans, lentils
 - **dairy** → milk, cheese, butter, yogurt, cream
-- **fats** → oil, olive oil, margarine, avocado, peanut butter
 - **sugars** → sugar, chocolate, syrup, honey, sweets, candy
 If an item does not clearly fit any of these, assign **"other"**.
 
@@ -16,7 +15,7 @@ Assign an appropriate **unit of measurement**—preferably one of **loaf, pcs, k
 Always use the most precise and realistic unit of measurement for the item (e.g., use "mL" before "L" or "g" before "kg" when applicable).
 
 For the expiry date, ensure it is formatted as "YYYY-MM-DD". 
-If the expiry date is not explicitly mentioned, infer a reasonable default starting from the date specified in the text based on common shelf lives:
+If the expiry date is not explicitly mentioned, infer a reasonable default starting from the date specified in the text (if no date is specified in the text, then use today's date) based on common shelf lives:
 
 DAIRY:
   - Fresh milk: 7 days
@@ -38,7 +37,7 @@ FRUITS:
   - Bananas: 5-7 days (refrigerated)
   - Citrus: 14-21 days
 
-MEATS:
+PROTEIN:
   - Fresh raw chicken/fish: 1-2 days
   - Fresh raw beef/pork: 3-5 days
   - Cooked meat: 3-4 days
@@ -54,7 +53,7 @@ OTHER:
   - Refriegrated dairy and protein products
   - Frozen/long-lasting pantry items: 365 days
 
-If no reasonable inference can be made or date cannot be found, set the expiry date to null.
+If no reasonable inference can be made, set the expiry date to null.
 
 Present the cleaned and structured data in a valid ***JSON*** format that follows this structure:
 
