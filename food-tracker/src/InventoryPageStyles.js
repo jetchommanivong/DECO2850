@@ -10,6 +10,7 @@ export default StyleSheet.create({
     alignItems: "center",
     backgroundColor: "#fdfdfd",
     width: "100%",
+    height: "100vh",
   },
 
   pageHeader: {
@@ -21,7 +22,6 @@ export default StyleSheet.create({
 
   /* --- Pie chart --- */
   chartContainer: {
-    marginVertical: 28,
     width: "100%",
     maxWidth: 500,
     alignItems: "center",
@@ -308,6 +308,8 @@ cancelButtonText: {
     paddingHorizontal: 18,
     marginVertical: 4,
     alignItems: "center",
+    justifyContent: "center",
+    alignSelf: "center"
   },
   memberBtnText: {
     color: "#fff",
@@ -366,8 +368,7 @@ legendText: {
 filterChips: {
   flexDirection: 'row',
   flexWrap: 'wrap',
-  justifyContent: 'center',
-  marginVertical: 16,
+  justifyContent: 'flex-start',
   gap: 8,
 },
 
@@ -397,7 +398,6 @@ filterChipTextActive: {
 
 itemsListSection: {
   width: '100%',
-  maxWidth: 500,
   marginTop: 20,
 },
 
@@ -461,6 +461,7 @@ voiceOverlay: {
   borderTopLeftRadius: 20,
   borderTopRightRadius: 20,
   maxHeight: '90%',
+  minHeight: '75%',
   paddingBottom: 20,
 },
 
@@ -492,10 +493,11 @@ overlayTitle: {
 },
 
 memberSelection: {
-  flexDirection: 'row',
+  flexDirection: 'column',
   flexWrap: 'wrap',
   justifyContent: 'center',
   gap: 10,
+  alignContent: "center",
 },
 
 memberBtn2: {
@@ -687,5 +689,56 @@ expiryText: {
   marginTop: 2,
   fontWeight: "500",
 },
+
+mainContentContainer: {
+  width: "100%",
+  flexDirection: "row",
+  alignItems: "flex-start",
+  gap: 40,
+},
+
+leftColumn: {
+  alignSelf: 'flex-start',
+  flex: 1,
+  minWidth: 300,
+  maxWidth: 500,
+},
+
+rightColumn: {
+  alignSelf: 'flex-start',
+  flex: 2,
+  minWidth: 300,
+},
+
+legend: {
+  flexDirection: 'row',
+  justifyContent: 'center',
+  // flexWrap: 'wrap',
+  marginTop: 12,
+  gap: 14,
+},
+
+legendItem: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  marginHorizontal: 6,
+},
+
+legendDot: {
+  width: 14,
+  height: 14,
+  borderRadius: 7,
+  marginRight: 6,
+},
+
+legendText: {
+  color: '#333',
+  fontSize: 14,
+},
+headerButtons: {
+  display: 'flex',
+  flexDirection: 'row',
+  gap: 10,
+}
 
 });

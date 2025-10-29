@@ -1,14 +1,14 @@
 import React, { useState, useRef } from 'react';
 import { View, Text, TouchableOpacity, FlatList, StyleSheet } from 'react-native';
 import { useWindowDimensions, Alert } from 'react-native';
-import { store } from '../store';
+import { store, useMembers } from '../store';
 
 const ItemTable = ({ aiResponse, onClosePopup }) => {
   const [items, setItems] = useState(aiResponse?.items ?? []);
   const [selectedMember, setSelectedMember] = useState('None');
   const { width } = useWindowDimensions();
   const isSmallScreen = width < 400;
-  const members = ['None', 'Jared', 'Izzy', 'Azra', 'Eden'];
+  const members = useMembers();
 
   const holdTimeout = useRef(null);
   const holdInterval = useRef(null);
@@ -180,15 +180,15 @@ const ItemTable = ({ aiResponse, onClosePopup }) => {
         >
           {members.map((member) => (
             <TouchableOpacity
-              key={member}
+              key={member.member_id}
               activeOpacity={0.8}
-              onPress={() => setSelectedMember(member)}
+              onPress={() => setSelectedMember(member.member_name)}
               style={[
                 styles.categoryPill,
-                selectedMember === member && styles.selectedPill,
+                selectedMember === member.member_name && styles.selectedPill,
               ]}
             >
-              <Text style={styles.categoryText}>{member}</Text>
+              <Text style={styles.categoryText}>{member.member_name}</Text>
             </TouchableOpacity>
           ))}
         </View>
