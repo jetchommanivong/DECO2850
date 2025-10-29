@@ -89,17 +89,25 @@ export default function ReceiptScan({showModal, handleCloseModal}) {
     }
   };
 
+  const handleClose = () => {
+    setImageData(null);
+    setAIResponse('');
+    setShowAddItemPopup(false);
+    setLoading(false);
+    handleCloseModal();
+  };
+
   return (
     <Modal
       visible={showModal}
       animationType="slide"
       transparent={true}
-      onRequestClose={handleCloseModal}
+      onRequestClose={handleClose}
     >
       <View style={styles.voiceOverlayBackdrop}>
         <View style={styles.voiceOverlay}>
           <View style={styles.overlayHeader}>
-            <TouchableOpacity onPress={handleCloseModal} style={styles.closeBtn}>
+            <TouchableOpacity onPress={handleClose} style={styles.closeBtn}>
               <Text style={styles.closeBtnText}>✖</Text>
             </TouchableOpacity>
           </View>
@@ -170,10 +178,7 @@ export default function ReceiptScan({showModal, handleCloseModal}) {
                   <Text style={{ marginTop: 15, fontSize: 16, color: '#555' }}>Processing...</Text>
                 </View>
               ) : (
-                <ItemTable aiResponse={aiResponse} onClosePopup={() => {
-                  setShowAddItemPopup(false);
-                  handleCloseModal();
-                }} />
+                <ItemTable aiResponse={aiResponse} onClosePopup={handleClose} />
               )}
             </Popup>
           </View>

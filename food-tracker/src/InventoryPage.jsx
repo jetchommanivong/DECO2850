@@ -8,6 +8,7 @@ import {
   Dimensions,
   Modal,
   useWindowDimensions,
+  TextInput,
 } from "react-native";
 import Svg, { Path, G, Circle, Image as SvgImage, Text as SvgText } from "react-native-svg";
 import * as d3Shape from "d3-shape";
@@ -16,6 +17,8 @@ import styles from "./InventoryPageStyles";
 import { useItems, useMembers, store } from "./store";
 import VoiceRecorderHybrid from "./VoiceRecorder";
 import ReceiptScan from "./ReceiptScan";
+// import Ionicons from '@expo/vector-icons/Ionicons';
+import AntDesign from '@expo/vector-icons/AntDesign';
 
 const AnimatedG = Animated.createAnimatedComponent(G);
 const { width } = Dimensions.get("window");
@@ -57,6 +60,9 @@ export default function InventoryPage() {
   const [showModal, setShowModal] = useState(false);
   const [overlayTitle, setOverlayTitle] = useState("");
   const [transcriptProcessed, setTranscriptProcessed] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editValue, setEditValue] = useState("");
+  const [editingItemId, setEditingItemId] = useState(null);
 
   const recordingRef = useRef(null);
   const micPulse = useRef(new Animated.Value(1)).current;
@@ -540,6 +546,8 @@ export default function InventoryPage() {
                     expiryInfo = { text: `${daysUntilExpiry}d left`, color: "#95a5a6" };
                   }
                 }
+
+                const isEditing = editingItemId === item.id;
                 
                 return (
                   <View key={item.id} style={styles.itemRow}>
@@ -551,12 +559,85 @@ export default function InventoryPage() {
                         </Text>
                       )}
                     </View>
-                    <Text style={styles.itemQuantity}>
-                      {item.quantity} {item.unit}
-                    </Text>
-                    <TouchableOpacity style={styles.itemActionBtn}>
-                      <Text style={styles.itemActionBtnText}>⊖</Text>
-                    </TouchableOpacity>
+                    
+                    {/* Edit */}
+                    {!isEditing ? (
+                      <View style={styles.editContainer}>
+                        <Text style={styles.itemQuantity}>
+                          {item.quantity} {item.unit}
+                        </Text>
+                        <TouchableOpacity 
+                          style={styles.editBtn}
+                          onPress={() => {
+                            setEditingItemId(item.id);
+                            setEditValue(item.quantity.toString());
+                          }}
+                        >
+                          <AntDesign name="edit" size={20} color="black" />
+                        </TouchableOpacity>
+                      </View>
+                    ) : (
+                      <View style={styles.editContainer}>
+                        <TouchableOpacity 
+                          style={styles.incrementBtn}
+                          onPress={() => {
+                            const currentValue = parseFloat(editValue);
+                            if (!isNaN(currentValue) && currentValue > 0) {
+                              setEditValue((currentValue - 1).toString());
+                            }
+                          }}
+                        >
+                          <Text style={styles.incrementBtnText}>−</Text>
+                        </TouchableOpacity>
+                        
+                        <TextInput
+                          style={styles.quantityInput}
+                          value={editValue}
+                          onChangeText={setEditValue}
+                          keyboardType="numeric"
+                        />
+                        
+                        <TouchableOpacity 
+                          style={styles.incrementBtn}
+                          onPress={() => {
+                            const currentValue = parseFloat(editValue);
+                            if (!isNaN(currentValue)) {
+                              setEditValue((currentValue + 1).toString());
+                            }
+                          }}
+                        >
+                          <Text style={styles.incrementBtnText}>+</Text>
+                        </TouchableOpacity>
+                        
+                        <TouchableOpacity 
+                          style={styles.saveBtn}
+                          onPress={() => {
+                            const numValue = parseFloat(editValue);
+                            if (!isNaN(numValue) && numValue >= 0) {
+                              const difference = item.quantity - numValue;
+
+                              store.actions.items.updateQuantity(item.id, difference);
+                              showToast(`Updated ${item.name} to ${numValue} ${item.unit}`, "success");
+                            } else {
+                            }
+                            setEditingItemId(null);
+                            setEditValue("");
+                          }}
+                        >
+                          <Text style={styles.saveBtnText}>✓</Text>
+                        </TouchableOpacity>
+                        
+                        <TouchableOpacity 
+                          style={styles.cancelBtn}
+                          onPress={() => {
+                            setEditingItemId(null);
+                            setEditValue("");
+                          }}
+                        >
+                          <Text style={styles.cancelBtnText}>✕</Text>
+                        </TouchableOpacity>
+                      </View>
+                    )}
                   </View>
                 )
               })
@@ -748,7 +829,8 @@ export default function InventoryPage() {
           </View>
         </View>
       </Modal>
-      <ReceiptScan showModal={showModal} handleCloseModal={handleCloseModal}/>
+      {/* <ReceiptScan showModal={showModal} handleCloseModal={handleCloseModal}/> */}
+      {showModal && <ReceiptScan showModal={showModal} handleCloseModal={handleCloseModal}/>}
 
 
       {/* Toast */}
