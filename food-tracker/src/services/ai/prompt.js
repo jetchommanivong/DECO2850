@@ -15,7 +15,7 @@ Assign an appropriate **unit of measurement**—preferably one of **loaf, pcs, k
 Always use the most precise and realistic unit of measurement for the item (e.g., use "mL" before "L" or "g" before "kg" when applicable).
 
 For the expiry date, ensure it is formatted as "YYYY-MM-DD". 
-If the expiry date is not explicitly mentioned, infer a reasonable default starting from the date specified in the text based on common shelf lives:
+If the expiry date is not explicitly mentioned, infer a reasonable default starting from the date specified in the text (if no date is specified in the text, then use today's date) based on common shelf lives:
 
 DAIRY:
   - Fresh milk: 7 days
@@ -53,7 +53,7 @@ OTHER:
   - Refriegrated dairy and protein products
   - Frozen/long-lasting pantry items: 365 days
 
-If no reasonable inference can be made or date cannot be found, set the expiry date to null.
+If no reasonable inference can be made, set the expiry date to null.
 
 Present the cleaned and structured data in a valid ***JSON*** format that follows this structure:
 
