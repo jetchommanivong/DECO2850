@@ -370,20 +370,24 @@ filterChips: {
   flexWrap: 'wrap',
   justifyContent: 'flex-start',
   gap: 8,
+  backgroundColor: '#f0f0f0',
+  padding: 7,
+  borderRadius: 10,
 },
 
 filterChip: {
   paddingHorizontal: 16,
   paddingVertical: 8,
   borderRadius: 20,
-  backgroundColor: '#f0f0f0',
+  backgroundColor: '#fdfdfd',
   borderWidth: 1,
   borderColor: '#ddd',
 },
 
 filterChipActive: {
-  backgroundColor: '#3b82f6',
-  borderColor: '#3b82f6',
+  // backgroundColor: '#3b82f6',
+  // borderColor: '#3b82f6',
+  backgroundColor: '#333333',
 },
 
 filterChipText: {
@@ -702,6 +706,7 @@ leftColumn: {
   flex: 1,
   minWidth: 300,
   maxWidth: 500,
+  gap: 30,
 },
 
 rightColumn: {
@@ -739,6 +744,7 @@ headerButtons: {
   display: 'flex',
   flexDirection: 'row',
   gap: 10,
+  alignSelf: 'center',
 },
 editBtn: {
   backgroundColor: 'white',

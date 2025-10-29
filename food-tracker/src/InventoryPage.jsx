@@ -364,20 +364,6 @@ export default function InventoryPage() {
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.pageHeader}>Fridge Inventory</Text>
-        <View style={styles.headerButtons}>
-          <TouchableOpacity
-            onPress={() => setShowModal(true)}
-            style={styles.voiceLogButton}
-          >
-            <Text style={styles.voiceLogButtonText}>Scan Receipt</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => setShowVoiceOverlay(true)}
-            style={styles.voiceLogButton}
-          >
-            <Text style={styles.voiceLogButtonText}>Voice Log</Text>
-          </TouchableOpacity>
-        </View>
       </View>
 
       {/* Main Content Container */}
@@ -469,6 +455,22 @@ export default function InventoryPage() {
             ) : (
               <Text style={styles.itemText}>No items in your fridge.</Text>
             )}
+          </View>
+
+          {/* Receipt Scan / Voice Log */}
+          <View style={styles.headerButtons}>
+            <TouchableOpacity
+              onPress={() => setShowModal(true)}
+              style={styles.voiceLogButton}
+            >
+              <Text style={styles.voiceLogButtonText}>Scan Receipt</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => setShowVoiceOverlay(true)}
+              style={styles.voiceLogButton}
+            >
+              <Text style={styles.voiceLogButtonText}>Voice Log</Text>
+            </TouchableOpacity>
           </View>
         </View>
 
