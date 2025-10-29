@@ -8,7 +8,6 @@ Use the following examples as a guide:
 - **grains** → rice, bread, pasta, oats, flour, cereal, noodles
 - **protein** → chicken, beef, pork, fish, eggs, tofu, beans, lentils
 - **dairy** → milk, cheese, butter, yogurt, cream
-- **fats** → oil, olive oil, margarine, avocado, peanut butter
 - **sugars** → sugar, chocolate, syrup, honey, sweets, candy
 If an item does not clearly fit any of these, assign **"other"**.
 
@@ -38,7 +37,7 @@ FRUITS:
   - Bananas: 5-7 days (refrigerated)
   - Citrus: 14-21 days
 
-MEATS:
+PROTEIN:
   - Fresh raw chicken/fish: 1-2 days
   - Fresh raw beef/pork: 3-5 days
   - Cooked meat: 3-4 days
