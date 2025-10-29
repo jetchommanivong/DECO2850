@@ -1,6 +1,7 @@
 import React, { useMemo } from "react";
-import { View, Text, Image, ScrollView, TouchableOpacity } from "react-native";
+import { View, Text, Image, ScrollView, TouchableOpacity, useWindowDimensions } from "react-native";
 import { useItems, store } from "./store";
+import styles from "./InventoryPageStyles";
 
 // ✅ Local fallback icons (if item.icon not provided)
 import MilkIcon from "./assets/Items/Milk.png";
@@ -23,10 +24,10 @@ export default function FridgeLockScreen() {
     const expiry = new Date(expiryDate);
     if (isNaN(expiry)) return null;
     const today = new Date();
-    const diffTime = expiry - today;
+    // normalize times to avoid partial-day issues
+    const diffTime = expiry.setHours(0, 0, 0, 0) - today.setHours(0, 0, 0, 0);
     return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
   };
-
 
   // 🎨 Color logic based on urgency
   const getExpiryColor = (daysLeft) => {
@@ -39,13 +40,17 @@ export default function FridgeLockScreen() {
 
   // 🗂️ Group items by expiry proximity
   const groupedItems = useMemo(() => {
-    const groups = { Today: [], "This Week": [], "Next Week": [] };
+    const groups = { Today: [], "This Week": [], "Next Week": [], "Later / No Expiry": [] };
     items.forEach((item) => {
       const daysLeft = getDaysLeft(item.expiry);
-      if (daysLeft == null) return; // skip items without expiry
+      if (daysLeft == null) {
+        groups["Later / No Expiry"].push(item);
+        return;
+      }
       if (daysLeft <= 0) groups.Today.push(item);
       else if (daysLeft <= 7) groups["This Week"].push(item);
       else if (daysLeft <= 14) groups["Next Week"].push(item);
+      else groups["Later / No Expiry"].push(item);
     });
     return groups;
   }, [items]);
@@ -55,121 +60,109 @@ export default function FridgeLockScreen() {
     const d = getDaysLeft(item.expiry);
     return d != null && d <= 3;
   }).length;
-  const barWidth = (urgentCount / Math.max(items.length, 1)) * 100;
+
+  // get screen width so bar can be ~80% of available width
+  const { width: screenWidth } = useWindowDimensions();
+  const BAR_CONTAINER_WIDTH = Math.round(screenWidth * 0.8); // ~80% of screen
+  const fillPercent = Math.round((urgentCount / Math.max(items.length, 1)) * 100);
+
+  const barColor =
+    urgentCount / Math.max(items.length, 1) > 0.66
+      ? "#C62828"
+      : urgentCount / Math.max(items.length, 1) > 0.33
+      ? "#FB8C00"
+      : "#43A047";
 
   return (
-    <ScrollView
-      style={{ flex: 1, backgroundColor: "#fff" }}
-      contentContainerStyle={{ padding: 20 }}
-    >
-      <Text style={{ fontSize: 26, fontWeight: "bold", marginBottom: 10 }}>
-        Expiring Items
-      </Text>
+    <ScrollView contentContainerStyle={styles.inventoryPage}>
+      <View style={styles.header}>
+        <Text style={styles.pageHeader}>Expiring Items</Text>
+      </View>
+      <Text style={{ color: "#666", marginTop: 4 }}>Keep an eye on soon-to-expire food</Text>
 
-      {/* Status Bar */}
-      <View
-        style={{
-          height: 18,
-          backgroundColor: "#eee",
-          borderRadius: 10,
-          overflow: "hidden",
-          marginBottom: 20,
-        }}
-      >
+      {/* Compact status bar: centered and ~80% of screen width */}
+      <View style={{ alignItems: "center", marginTop: 14, marginBottom: 18 }}>
         <View
           style={{
-            width: `${barWidth}%`,
-            height: "100%",
-            backgroundColor:
-              urgentCount / items.length > 0.66
-                ? "#C62828"
-                : urgentCount / items.length > 0.33
-                ? "#FB8C00"
-                : "#43A047",
+            width: BAR_CONTAINER_WIDTH,
+            height: 16,
+            backgroundColor: "#eee",
+            borderRadius: 12,
+            overflow: "hidden",
           }}
-        />
+        >
+          <View style={{ width: `${fillPercent}%`, height: "100%", backgroundColor: barColor }} />
+        </View>
+
+        <Text style={{ marginTop: 8, color: "#555", fontSize: 13 }}>
+          {urgentCount} item{urgentCount !== 1 ? "s" : ""} expiring within 3 days
+        </Text>
       </View>
 
-      {/* Grouped items */}
-      {Object.entries(groupedItems).map(([groupName, groupItems]) =>
-        groupItems.length > 0 ? (
-          <View key={groupName} style={{ marginBottom: 20 }}>
-            <Text style={{ fontSize: 22, fontWeight: "bold", marginBottom: 8 }}>
-              {groupName}
-            </Text>
+      {/* Grouped items rendered using the same item styling as InventoryPage */}
+      <View style={styles.itemsListSection}>
+        {Object.entries(groupedItems).map(([groupName, list]) =>
+          list.length > 0 ? (
+            <View key={groupName} style={{ marginBottom: 18, paddingHorizontal: 12 }}>
+              <Text style={{ fontSize: 18, fontWeight: "700", marginBottom: 8 }}>{groupName}</Text>
 
-            {groupItems.map((item) => {
-              const daysLeft = getDaysLeft(item.expiry);
-              const color = getExpiryColor(daysLeft);
+              {list
+                .sort((a, b) => {
+                  // ensure consistent ordering: soonest expiry first, no-expiry last
+                  const aDays = getDaysLeft(a.expiry);
+                  const bDays = getDaysLeft(b.expiry);
+                  if (aDays == null && bDays == null) return a.name.localeCompare(b.name);
+                  if (aDays == null) return 1;
+                  if (bDays == null) return -1;
+                  return aDays - bDays;
+                })
+                .map((item) => {
+                  const daysLeft = getDaysLeft(item.expiry);
+                  const color = getExpiryColor(daysLeft);
 
-              return (
-                <View
-                  key={item.id}
-                  style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    backgroundColor: "#f9f9f9",
-                    borderRadius: 10,
-                    padding: 10,
-                    marginBottom: 8,
-                    borderWidth: 1,
-                    borderColor: color,
-                  }}
-                >
-                  <View style={{ flexDirection: "row", alignItems: "center" }}>
-                    <Image
-                      source={
-                        item.icon ||
-                        fallbackIcons[item.name?.toLowerCase()] ||
-                        AppleIcon
-                      }
-                      style={{
-                        width: 40,
-                        height: 40,
-                        borderRadius: 6,
-                        marginRight: 10,
-                      }}
-                    />
-                    <View>
-                      <Text style={{ fontSize: 16, fontWeight: "bold" }}>
-                        {item.name}
-                      </Text>
-                      <Text style={{ fontSize: 14, color: "#555" }}>
-                        {item.quantity} {item.unit}
-                      </Text>
-                      <Text
-                        style={{
-                          color,
-                          fontSize: 12,
-                          marginTop: 2,
-                        }}
-                      >
-                        {daysLeft == null
-                          ? "No expiry"
-                          : daysLeft <= 0
-                          ? "Expired"
-                          : `${daysLeft} day${daysLeft > 1 ? "s" : ""} left`}
-                      </Text>
+                  return (
+                    <View
+                      key={item.id}
+                      style={[
+                        styles.itemRow,
+                        { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
+                      ]}
+                    >
+                      <View style={{ flexDirection: "row", alignItems: "center", flex: 1 }}>
+                        <Image
+                          source={item.icon || fallbackIcons[item.name?.toLowerCase()] || AppleIcon}
+                          style={{ width: 44, height: 44, borderRadius: 8, marginRight: 12 }}
+                        />
+                        <View style={{ flex: 1 }}>
+                          <Text style={styles.itemName}>{item.name}</Text>
+                          <Text style={{ color: "#666", fontSize: 13 }}>
+                            {item.quantity} {item.unit}
+                          </Text>
+                          <Text style={[styles.expiryText || { fontSize: 12 }, { color, marginTop: 4 }]}>
+                            {daysLeft == null
+                              ? "No expiry"
+                              : daysLeft <= 0
+                              ? "Expired"
+                              : `${daysLeft} day${daysLeft > 1 ? "s" : ""} left`}
+                          </Text>
+                        </View>
+                      </View>
+
+                      <TouchableOpacity onPress={() => removeItem(item.id)} style={{ marginLeft: 12 }}>
+                        <Text style={{ color: "#C62828", fontWeight: "700" }}>Remove</Text>
+                      </TouchableOpacity>
                     </View>
-                  </View>
-
-                  <TouchableOpacity onPress={() => removeItem(item.id)}>
-                    <Text style={{ color: "#C62828", fontWeight: "600" }}>
-                      Remove
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-              );
-            })}
-          </View>
-        ) : null
-      )}
+                  );
+                })}
+            </View>
+          ) : null
+        )}
+      </View>
 
       {items.length === 0 && (
-        <Text style={{ color: "#777", textAlign: "center", marginTop: 40 }}>
-          No items in your fridge yet.
-        </Text>
+        <View style={{ padding: 30 }}>
+          <Text style={{ color: "#777", textAlign: "center" }}>No items in your fridge yet.</Text>
+        </View>
       )}
     </ScrollView>
   );

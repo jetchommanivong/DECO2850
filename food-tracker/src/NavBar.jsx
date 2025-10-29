@@ -19,6 +19,7 @@ export default function NavBar() {
   ];
 
   return (
+    // only apply the bottom safe-area inset
     <SafeAreaView style={styles.safeArea} edges={['bottom']}>
       <View style={styles.container} accessibilityRole="navigation" accessibilityLabel="Main navigation">
         {navItems.map((item) => {
@@ -48,13 +49,18 @@ export default function NavBar() {
 const styles = StyleSheet.create({
   safeArea: {
     backgroundColor: "#fff",
+    paddingTop: 0,
   },
   container: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    bottom: 20,
     flexDirection: "row",
     height: 70,
     borderTopWidth: 1,
     borderTopColor: "#e6e6e6",
-    backgroundColor: "#fff",
+    backgroundColor: "#ffffff",
     justifyContent: "space-around",
     alignItems: "center",
     paddingHorizontal: 8,
@@ -74,10 +80,10 @@ const styles = StyleSheet.create({
   btn: {
     alignItems: "center",
     justifyContent: "center",
-    width: 100,
     paddingVertical: 6,
     paddingHorizontal: 10,
     borderRadius: 12,
+    width: 100,
   },
   btnActive: {
     backgroundColor: "#eaf2ff",
