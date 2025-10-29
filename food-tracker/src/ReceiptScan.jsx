@@ -121,7 +121,7 @@ export default function ReceiptScan({showModal, handleCloseModal}) {
                   width: '90%',
                   height: 300,
                   alignSelf: 'center',
-                  marginTop: 50,
+                  marginTop: 20,
                   borderRadius: 12,
                 }}
               />
@@ -132,8 +132,8 @@ export default function ReceiptScan({showModal, handleCloseModal}) {
               style={{
                 width: '90%',
                 height: 50,
-                marginTop: 30,
-                backgroundColor: 'black',
+                marginTop: 20,
+                backgroundColor: '#4c8bf5',
                 justifyContent: 'center',
                 alignItems: 'center',
                 alignSelf: 'center',
@@ -141,7 +141,7 @@ export default function ReceiptScan({showModal, handleCloseModal}) {
               }}
               onPress={openCamera}
             >
-              <Text style={{ color: 'white', fontSize: 20 }}>Take a photo</Text>
+              <Text style={{ color: 'white', fontWeight: '600', fontSize: 20 }}>Take a photo</Text>
             </TouchableOpacity>
             
             {/* --- Get Text & AI Button --- */}
@@ -149,8 +149,8 @@ export default function ReceiptScan({showModal, handleCloseModal}) {
               style={{
                 width: '90%',
                 height: 50,
-                marginTop: 30,
-                backgroundColor: imageData ? 'black' : 'gray',
+                marginTop: 20,
+                backgroundColor: imageData ? '#4c8bf5' : 'gray',
                 justifyContent: 'center',
                 alignItems: 'center',
                 alignSelf: 'center',
@@ -161,7 +161,7 @@ export default function ReceiptScan({showModal, handleCloseModal}) {
               }}
               disabled={!imageData}
             >
-              <Text style={{ color: 'white', fontSize: 20 }}>Add Items to Inventory</Text>
+              <Text style={{ color: 'white', fontWeight: '600', fontSize: 20 }}>Add Items to Inventory</Text>
             </TouchableOpacity>
             
             {/* --- General Popup --- */}
