@@ -370,20 +370,24 @@ filterChips: {
   flexWrap: 'wrap',
   justifyContent: 'flex-start',
   gap: 8,
+  backgroundColor: '#f0f0f0',
+  padding: 7,
+  borderRadius: 10,
 },
 
 filterChip: {
   paddingHorizontal: 16,
   paddingVertical: 8,
   borderRadius: 20,
-  backgroundColor: '#f0f0f0',
+  backgroundColor: '#fdfdfd',
   borderWidth: 1,
   borderColor: '#ddd',
 },
 
 filterChipActive: {
-  backgroundColor: '#3b82f6',
-  borderColor: '#3b82f6',
+  // backgroundColor: '#3b82f6',
+  // borderColor: '#3b82f6',
+  backgroundColor: '#333333',
 },
 
 filterChipText: {
@@ -702,6 +706,7 @@ leftColumn: {
   flex: 1,
   minWidth: 300,
   maxWidth: 500,
+  gap: 30,
 },
 
 rightColumn: {
@@ -739,6 +744,72 @@ headerButtons: {
   display: 'flex',
   flexDirection: 'row',
   gap: 10,
-}
+  alignSelf: 'center',
+},
+editBtn: {
+  backgroundColor: 'white',
+  borderColor: '#e3e3e3',
+  borderWidth: 1,
+  padding: 8,
+  borderRadius: 8,
+  minWidth: 36,
+  alignItems: 'center',
+},
+editBtnText: {
+  fontSize: 18,
+},
+editContainer: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  gap: 8,
+},
+incrementBtn: {
+  backgroundColor: '#ecf0f1',
+  width: 32,
+  height: 32,
+  borderRadius: 6,
+  justifyContent: 'center',
+  alignItems: 'center',
+},
+incrementBtnText: {
+  fontSize: 20,
+  color: '#2c3e50',
+  fontWeight: 'bold',
+},
+quantityInput: {
+  backgroundColor: '#fff',
+  borderWidth: 1,
+  borderColor: '#bdc3c7',
+  borderRadius: 6,
+  paddingHorizontal: 12,
+  paddingVertical: 6,
+  fontSize: 16,
+  textAlign: 'center',
+  minWidth: 60,
+},
+saveBtn: {
+  backgroundColor: '#27ae60',
+  padding: 8,
+  borderRadius: 6,
+  minWidth: 32,
+  alignItems: 'center',
+},
+saveBtnText: {
+  color: '#fff',
+  fontSize: 18,
+  fontWeight: 'bold',
+},
+cancelBtn: {
+  backgroundColor: '#e74c3c',
+  padding: 8,
+  borderRadius: 6,
+  minWidth: 32,
+  alignItems: 'center',
+},
+cancelBtnText: {
+  color: '#fff',
+  fontSize: 18,
+  fontWeight: 'bold',
+},
 
 });
