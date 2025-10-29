@@ -6,8 +6,6 @@ import Layout from "./src/Layout";
 // Screens
 import FridgeLockScreen from "./src/FridgeLockScreen";
 import InventoryPage from "./src/InventoryPage";
-import ReceiptScan from "./src/ReceiptScan";
-import TempItemPhoto from "./src/TempItemPhoto";
 import Household from "./src/Household";
 
 const Stack = createNativeStackNavigator();
@@ -145,17 +143,6 @@ export default function App() {
                 onAddItem={handleAddItem}
                 onLogAction={handleLogAction}
                 onTranscript={handleTranscript}
-              />
-            </Layout>
-          )}
-        />
-        <Stack.Screen
-          name="TempItemPhoto"
-          children={() => (
-            <Layout>
-              <TempItemPhoto
-                inventory={inventory}
-                onUpdateQuantity={handleUpdateQuantity}
               />
             </Layout>
           )}

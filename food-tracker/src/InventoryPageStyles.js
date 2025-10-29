@@ -34,6 +34,7 @@ export default StyleSheet.create({
     shadowOpacity: 0.08,
     shadowRadius: 10,
     elevation: 4,
+    minHeight: 100,
   },
 
   // 👆 Adds subtle card background around the pie chart
