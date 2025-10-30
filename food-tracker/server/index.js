@@ -191,7 +191,7 @@ app.post("/api/parse-transcript", async (req, res) => {
           itemName: z.string().describe("The name of the item"),
           quantity: z.number().positive().describe("The positive quantity of the item"),
           unit: z.string().optional().describe("The unit of measurement (optional)"),
-          category: z.enum(["Dairy", "Vegetables", "Fruits", "Meats", "Other"])
+          category: z.enum(["Dairy", "Vegetables", "Fruits", "Protein", "Grains", "Sugars", "Other"])
             .describe("The food category for the item"),
           estimatedExpiryDays: z.number().int().nonnegative().optional()
             .describe("Estimated number of days until expiry from today (for 'add' actions only)")
@@ -221,7 +221,9 @@ app.post("/api/parse-transcript", async (req, res) => {
         - "Dairy" (milk, cheese, butter, yogurt, etc.)
         - "Vegetables" (broccoli, lettuce, onion, garlic, etc.)
         - "Fruits" (apple, tomato, banana, etc.)
-        - "Meats" (chicken, beef, pork, ham, fish, etc.)
+        - "Protein" (chicken, beef, pork, ham, fish, eggs, tofu, beans, lentils, etc.)
+        - "Grains" (rice, bread, pasta, oats, flour, cereal, noodles, etc.)
+        - "Sugars" (sugar, chocolate, syrup, honey, sweets, candy, etc.)
         - "Other" (if it doesn't fit the above)
 
       6. EXPIRY ESTIMATION (for "add" actions ONLY):
@@ -269,7 +271,7 @@ app.post("/api/parse-transcript", async (req, res) => {
 
         
 
-        MEATS:
+        PROTEIN:
 
         - Fresh raw chicken/fish: 1-2 days
 
