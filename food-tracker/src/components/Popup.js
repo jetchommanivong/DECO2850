@@ -74,8 +74,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   popupContainer: {
-    width: Math.min(width * 0.9, 700),
-    maxHeight: height * 0.85,
+    height: height * 0.7,
     backgroundColor: "#fff",
     borderRadius: 18,
     paddingVertical: 20,
