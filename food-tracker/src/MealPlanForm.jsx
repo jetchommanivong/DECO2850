@@ -1,59 +1,95 @@
-import { useState } from "react";
-import "./Popup.css";
-
-// Actions
-import CancelIcon from "./assets/Actions/Cancel.png";
-import DateIcon from "./assets/Logo/date.png";
+import React, { useState } from "react";
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  Modal,
+  Alert,
+} from "react-native";
 
 export default function MealPlanForm({ onClose, onAdd }) {
   const [meal, setMeal] = useState("");
   const [date, setDate] = useState("");
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
+  const handleSubmit = () => {
+    if (!meal || !date) {
+      Alert.alert("⚠️ Missing Info", "Please fill in both fields.");
+      return;
+    }
     onAdd({ id: Date.now(), meal, date, planner: "You", joined: [] });
-    alert(`✅ Meal plan "${meal}" added successfully!`);
-    setMeal("");
-    setDate("");
+    Alert.alert("✅ Added", `${meal} added successfully!`);
     onClose();
   };
 
   return (
-    <div className="popup-overlay">
-      <div className="popup-box meal-popup">
-        <button className="popup-close" onClick={onClose}>
-          <img src={CancelIcon} alt="Close" />
-        </button>
+    <Modal transparent animationType="fade" visible onRequestClose={onClose}>
+      <View
+        style={{
+          flex: 1,
+          backgroundColor: "rgba(0,0,0,0.6)",
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
+        <View
+          style={{
+            backgroundColor: "white",
+            borderRadius: 10,
+            padding: 20,
+            width: "85%",
+          }}
+        >
+          <Text style={{ fontSize: 20, fontWeight: "bold", marginBottom: 10 }}>
+            Add Meal Plan
+          </Text>
 
-        <h2>Add Meal Plan</h2>
-        <form onSubmit={handleSubmit} className="meal-form">
-          <div className="form-row">
-            <label className="form-label">Meal Name :</label>
-            <input
-              type="text"
-              value={meal}
-              onChange={(e) => setMeal(e.target.value)}
-              required
-              className="form-input"
-            />
-          </div>
+          <TextInput
+            placeholder="Meal name"
+            value={meal}
+            onChangeText={setMeal}
+            style={{
+              borderWidth: 1,
+              borderColor: "#ccc",
+              borderRadius: 8,
+              padding: 10,
+              marginBottom: 10,
+            }}
+          />
 
-          <div className="form-row">
-            <label className="form-label">
-              Date :
-            </label>
-            <input
-              type="date"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-              required
-              className="form-input"
-            />
-          </div>
+          <TextInput
+            placeholder="YYYY-MM-DD"
+            value={date}
+            onChangeText={setDate}
+            style={{
+              borderWidth: 1,
+              borderColor: "#ccc",
+              borderRadius: 8,
+              padding: 10,
+              marginBottom: 15,
+            }}
+          />
 
-          <button type="submit" className="submit-btn">Submit</button>
-        </form>
-      </div>
-    </div>
+          <TouchableOpacity
+            onPress={handleSubmit}
+            style={{
+              backgroundColor: "#007AFF",
+              paddingVertical: 10,
+              borderRadius: 6,
+              alignItems: "center",
+            }}
+          >
+            <Text style={{ color: "white", fontWeight: "bold" }}>Add</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            onPress={onClose}
+            style={{ marginTop: 10, alignItems: "center" }}
+          >
+            <Text>Cancel</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </Modal>
   );
 }
