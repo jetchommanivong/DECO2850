@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { useItems, useMembers, useUsageLogs, store } from "./store";
 import {
   View,
   Text,
@@ -8,9 +7,10 @@ import {
   TextInput,
   TouchableOpacity,
   Alert,
-  Platform,
 } from "react-native";
+import { useItems, useMembers, useUsageLogs, store } from "./store";
 import InviteUserPopup from "./InviteUserPopup";
+import MealPlanForm from "./MealPlanForm";
 
 // Images
 import HomeLogo from "./assets/Logo/Home.png";
@@ -20,13 +20,14 @@ import AddPng from "./assets/Actions/Add.png";
 import SearchIcon from "./assets/Actions/Search.png";
 import User1 from "./assets/Avatar/User 1.png";
 import User2 from "./assets/Avatar/User 2.png";
+import User3 from "./assets/Avatar/User 3.png";
 import User4 from "./assets/Avatar/User 4.png";
 import User5 from "./assets/Avatar/User 5.png";
+import User6 from "./assets/Avatar/User 6.png";
 
-const AVATAR_OPTIONS = [User1, User2, User4, User5];
+const AVATAR_OPTIONS = [User1, User2, User3, User4, User5, User6];
 
 export default function Household() {
-  // Get data from store
   const items = useItems();
   const members = useMembers();
   const usageLogs = useUsageLogs();
@@ -45,25 +46,26 @@ export default function Household() {
   const [searchTerm, setSearchTerm] = useState("");
   const [userAvatars, setUserAvatars] = useState({});
   const [showInvitePopup, setShowInvitePopup] = useState(false);
+  const [showMealForm, setShowMealForm] = useState(false);
 
+  // ensure avatars sync with members
   useEffect(() => {
-    const newAvatars = { ...userAvatars };
+    const nextAvatars = { ...userAvatars };
     members.forEach((member, idx) => {
-      if (!newAvatars[member.member_id]) {
-        newAvatars[member.member_id] = AVATAR_OPTIONS[idx % AVATAR_OPTIONS.length];
+      if (!nextAvatars[member.member_id]) {
+        nextAvatars[member.member_id] = AVATAR_OPTIONS[idx % AVATAR_OPTIONS.length];
       }
     });
-    setUserAvatars(newAvatars);
+    setUserAvatars(nextAvatars);
   }, [members]);
 
-  // Convert members to display format
-  const users = members.map(m => {
+  const users = members.map((m) => {
     const claimed = items
-      .filter(item => item.claimedBy?.includes(m.member_name))
-      .map(item => item.name);
+      .filter((item) => item.claimedBy?.includes(m.member_name))
+      .map((item) => item.name);
 
     const userMeals = mealPlans.filter(
-      plan => plan.planner === m.member_name || plan.joined.includes(m.member_name)
+      (plan) => plan.planner === m.member_name || plan.joined.includes(m.member_name)
     );
 
     return {
@@ -75,63 +77,77 @@ export default function Household() {
     };
   });
 
-   // Build activity log from usage logs
-   const activity = usageLogs
-   .slice()
-   .reverse()
-   .slice(0, 10) // Show last 10 activities
-   .map((log) => {
-     const member = members.find(m => m.member_id === log.memberId);
-     const userName = member?.member_name || "Someone";
-     
-     if (log.action === "add") {
-       return `${userName} added ${log.quantity} of ${log.itemName}`;
-     } else if (log.action === "remove") {
-       return `${userName} removed ${log.quantity} of ${log.itemName}`;
-     }
-     return `${userName} ${log.action} ${log.itemName}`;
-   });
+  const currentUser = members.find((m) => m.member_name === "You") || members[0];
 
-
-  const filteredItems = items.filter((item) =>
-    item.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  // Get current user
-  const currentUser = members.find(m => m.member_name === "You") || members[0];
-
+  // --- Claim / Unclaim ---
   const handleToggleClaim = (item) => {
-    const currentUserName = currentUser?.member_name || "You";
-    const alreadyClaimed = item.claimedBy?.includes(currentUserName);
+    const userName = currentUser?.member_name || "You";
+    const alreadyClaimed = item.claimedBy?.includes(userName);
 
-    // Update item's claimedBy in store
-    store.actions.items.setClaimedByName(item.name, currentUserName, !alreadyClaimed);
+    store.actions.items.setClaimedByName(item.name, userName, !alreadyClaimed);
 
-    // Log the activity
     store.actions.logs.add({
       memberId: currentUser?.member_id || 0,
       action: alreadyClaimed ? "unclaimed" : "claimed",
       itemName: item.name,
-      quantity: 1
+      quantity: 1,
     });
   };
 
+  // --- Delete item ---
   const handleDeleteItem = (itemName) => {
-    Alert.alert(
-      "Delete Item",
-      `Are you sure you want to delete ${itemName}?`,
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: () => {
-            store.actions.items.removeByName(itemName);
-          }
-        }
-      ]
-    );
+    Alert.alert("Delete Item", `Delete ${itemName}?`, [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Delete",
+        style: "destructive",
+        onPress: () => {
+          store.actions.items.removeByName(itemName);
+          store.actions.logs.add({
+            memberId: currentUser?.member_id || 0,
+            action: "deleted item",
+            itemName,
+            quantity: 1,
+          });
+        },
+      },
+    ]);
   };
+
+  // --- Join meal ---
+  const handleJoinMeal = (meal) => {
+    const userName = currentUser?.member_name || "You";
+    if (!meal.joined.includes(userName)) {
+      setMealPlans((prev) =>
+        prev.map((m) =>
+          m.id === meal.id ? { ...m, joined: [...m.joined, userName] } : m
+        )
+      );
+
+      store.actions.logs.add({
+        memberId: currentUser?.member_id || 0,
+        action: "joined meal",
+        itemName: meal.meal,
+        quantity: 1,
+      });
+
+      Alert.alert("🎉 Joined!", "You've joined this meal plan!");
+    }
+  };
+
+  // --- Items retrieved directly from store ---
+  const filteredItems = items.filter((item) =>
+    item.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const activity = usageLogs
+    .slice()
+    .reverse()
+    .map((log) => {
+      const member = members.find((m) => m.member_id === log.memberId);
+      const userName = member?.member_name || "Someone";
+      return `${userName} ${log.action} ${log.itemName}`;
+    });
 
   return (
     <ScrollView
@@ -144,12 +160,14 @@ export default function Household() {
         <Text style={{ fontSize: 26, fontWeight: "bold" }}>Household</Text>
       </View>
 
-      {/* User row */}
+      {/* Users */}
       <ScrollView horizontal showsHorizontalScrollIndicator={false}>
         {users.map((u) => (
           <TouchableOpacity
             key={u.id}
-            onPress={() => Alert.alert(u.name, `Claimed: ${u.claimed.join(", ") || "Nothing yet"}`)}
+            onPress={() =>
+              Alert.alert(u.name, `Claimed: ${u.claimed.join(", ") || "Nothing yet"}`)
+            }
             style={{ alignItems: "center", marginRight: 10 }}
           >
             <Image
@@ -176,11 +194,11 @@ export default function Household() {
             • {a}
           </Text>
         ))
-        ) : (
-        <Text style={{ marginVertical: 2, color: "#999" }}>No activity yet</Text>
-        )}
+      ) : (
+        <Text style={{ color: "#888" }}>No recent activity</Text>
+      )}
 
-      {/* Items section */}
+      {/* Items */}
       <Text style={{ fontSize: 20, fontWeight: "bold", marginTop: 20 }}>Items</Text>
       <View
         style={{
@@ -210,14 +228,11 @@ export default function Household() {
               item.name,
               `Claimed by: ${item.claimedBy?.join(", ") || "No one"}`,
               [
-                {
-                  text: "Toggle Claim",
-                  onPress: () => handleToggleClaim(item)
-                },
+                { text: "Toggle Claim", onPress: () => handleToggleClaim(item) },
                 {
                   text: "Delete",
                   style: "destructive",
-                  onPress: () => handleDeleteItem(item.name)
+                  onPress: () => handleDeleteItem(item.name),
                 },
                 { text: "Cancel", style: "cancel" },
               ]
@@ -229,7 +244,6 @@ export default function Household() {
             borderBottomColor: "#eee",
             flexDirection: "row",
             justifyContent: "space-between",
-            alignItems: "center",
           }}
         >
           <Text>{item.name}</Text>
@@ -263,94 +277,98 @@ export default function Household() {
         }}
       >
         <Text style={{ fontSize: 20, fontWeight: "bold" }}>Meal Plan</Text>
-        <TouchableOpacity
-          onPress={() => Alert.alert("Add Meal", "Meal creation popup not available")}
-        >
+        <TouchableOpacity onPress={() => setShowMealForm(true)}>
           <Image source={AddPng} style={{ width: 30, height: 30 }} />
         </TouchableOpacity>
       </View>
 
-      {mealPlans.map((m) => (
-        <View
-          key={m.id}
-          style={{
-            borderWidth: 1,
-            borderColor: "#ddd",
-            borderRadius: 8,
-            padding: 10,
-            marginTop: 10,
-          }}
-        >
-          <View style={{ flexDirection: "row", alignItems: "center" }}>
-            <Image
-              source={DateIcon}
-              style={{ width: 20, height: 20, marginRight: 5 }}
-            />
-            <Text>{new Date(m.date).toDateString()}</Text>
-          </View>
-          <Text style={{ fontWeight: "bold", fontSize: 16 }}>{m.meal}</Text>
-          <Text>Planned by: {m.planner}</Text>
-
-          <View style={{ flexDirection: "row", marginTop: 5, alignItems: "center" }}>
-          {m.joined.map((userName) => {
-            const usr = users.find((x) => x.name === userName);
-            return usr ? (
+      {mealPlans.map((m) => {
+        const alreadyJoined = m.joined.includes(currentUser?.member_name || "You");
+        return (
+          <View
+            key={m.id}
+            style={{
+              borderWidth: 1,
+              borderColor: "#ddd",
+              borderRadius: 8,
+              padding: 10,
+              marginTop: 10,
+            }}
+          >
+            <View style={{ flexDirection: "row", alignItems: "center" }}>
               <Image
-                key={userName}
-                source={usr.avatar}
-                style={{
-                  width: 25,
-                  height: 25,
-                  borderRadius: 12.5,
-                  marginRight: 5,
-                }}
+                source={DateIcon}
+                style={{ width: 20, height: 20, marginRight: 5 }}
               />
-            ) : null;
-            })}
-            <TouchableOpacity
-              onPress={() => {
-                const currentUserName = currentUser?.member_name || "You";
+              <Text>{new Date(m.date).toDateString()}</Text>
+            </View>
+            <Text style={{ fontWeight: "bold", fontSize: 16 }}>{m.meal}</Text>
+            <Text>Planned by: {m.planner}</Text>
 
-                if (!m.joined.includes(currentUserName)) {
-                  setMealPlans((prev) =>
-                    prev.map((plan) =>
-                      plan.id === m.id
-                      ? { ...plan, joined: [...plan.joined, currentUserName] }
-                        : plan
-                    )
-                  );
-                  Alert.alert("🎉 Joined!", "You've been added to this meal plan.");
-                }
-              }}
-              style={{
-                marginLeft: 10,
-                backgroundColor: "#007AFF",
-                borderRadius: 6,
-                paddingHorizontal: 10,
-                paddingVertical: 6,
-              }}
-            >
-              <Text style={{ color: "white" }}>Join</Text>
-            </TouchableOpacity>
+            <View style={{ flexDirection: "row", marginTop: 5, alignItems: "center" }}>
+              {m.joined.map((userName) => {
+                const usr = users.find((x) => x.name === userName);
+                return usr ? (
+                  <Image
+                    key={userName}
+                    source={usr.avatar}
+                    style={{
+                      width: 25,
+                      height: 25,
+                      borderRadius: 12.5,
+                      marginRight: 5,
+                    }}
+                  />
+                ) : null;
+              })}
+              {!alreadyJoined && (
+                <TouchableOpacity
+                  onPress={() => handleJoinMeal(m)}
+                  style={{
+                    marginLeft: 10,
+                    backgroundColor: "#007AFF",
+                    borderRadius: 6,
+                    paddingHorizontal: 10,
+                    paddingVertical: 6,
+                  }}
+                >
+                  <Text style={{ color: "white" }}>Join</Text>
+                </TouchableOpacity>
+              )}
+            </View>
           </View>
-        </View>
-      ))}
+        );
+      })}
 
-      {/* Invite User Popup */}
+      {/* Popups */}
       {showInvitePopup && (
         <InviteUserPopup
           onAdd={(newUser) => {
-            // Add member to store
             store.actions.members.add(newUser.name);
-            
-            // Store avatar mapping
-            const newMemberId = store.getState().members.length;
-            setUserAvatars(prev => ({
+            const newMember = store.getState().members.find(
+              (m) => m.member_name === newUser.name
+            );
+            setUserAvatars((prev) => ({
               ...prev,
-              [newMemberId]: newUser.avatar
+              [newMember.member_id]: newUser.avatar,
             }));
           }}
           onClose={() => setShowInvitePopup(false)}
+        />
+      )}
+
+      {showMealForm && (
+        <MealPlanForm
+          onAdd={(newMeal) => {
+            setMealPlans((prev) => [...prev, newMeal]);
+            store.actions.logs.add({
+              memberId: currentUser?.member_id || 0,
+              action: "added meal plan",
+              itemName: newMeal.meal,
+              quantity: 1,
+            });
+          }}
+          onClose={() => setShowMealForm(false)}
         />
       )}
     </ScrollView>
